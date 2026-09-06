@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -8,504 +10,206 @@
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     >
 
-    <meta name="theme-color" content="#050509">
+    <meta name="theme-color" content="#05050a">
 
     <meta
         name="description"
-        content="LeoPDF - Convert, Compress and Simplify your PDF files."
+        content="LeoPDF - Convert, Compress and Simplify PDFs"
     >
 
     <title>LeoPDF</title>
 
     <link rel="stylesheet" href="style.css">
+
+    <!-- PDF LIBRARY -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+
+    <!-- PDF VIEWER -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
 </head>
+
 
 <body>
 
-    <!-- =====================================================
-         SPLASH SCREEN
-    ====================================================== -->
 
-    <section class="splash-screen" id="splashScreen">
+<!-- =====================================================
+     SPLASH
+===================================================== -->
 
-        <div class="splash-glow glow-one"></div>
-        <div class="splash-glow glow-two"></div>
+<div class="splash-screen" id="splashScreen">
 
-        <div class="splash-content">
+    <div class="splash-glow glow-one"></div>
+    <div class="splash-glow glow-two"></div>
 
-            <div class="logo-wrapper">
+    <div class="splash-content">
 
-                <img
-                    src="file_00000000db748208ae0361855c0a94b9.png"
-                    alt="LeoPDF Logo"
-                    class="app-logo"
-                    id="splashLogo"
-                >
+        <div class="logo-wrapper">
 
-                <div
-                    class="logo-fallback"
-                    id="logoFallback"
-                    style="display:none;"
-                >
-                    L
-                </div>
+            <img
+                src="file_00000000db748208ae0361855c0a94b9.png"
+                alt="LeoPDF Logo"
+                class="app-logo"
+                id="splashLogo"
+            >
 
+            <div
+                class="logo-fallback"
+                id="logoFallback"
+            >
+                L
             </div>
-
-            <h1 class="splash-title">
-                Leo<span>PDF</span>
-            </h1>
-
-            <p class="splash-tagline">
-                Convert. Compress. Simplify.
-            </p>
-
-            <div class="splash-loader">
-                <div class="loader-bar"></div>
-            </div>
-
-            <p class="loading-text">
-                Preparing your workspace...
-            </p>
 
         </div>
 
-    </section>
 
+        <h1 class="splash-title">
+            Leo<span>PDF</span>
+        </h1>
 
-    <!-- =====================================================
-         MAIN APP
-    ====================================================== -->
+        <p class="splash-tagline">
+            Convert. Compress. Simplify.
+        </p>
 
-    <main class="app" id="app">
 
-        <!-- HEADER -->
+        <div class="splash-loader">
 
-        <header class="app-header">
+            <div class="loader-bar"></div>
 
-            <div class="brand">
+        </div>
 
-                <div class="small-logo-wrapper">
 
-                    <img
-                        src="file_00000000db748208ae0361855c0a94b9.png"
-                        alt="LeoPDF"
-                        class="small-logo"
-                    >
+        <p class="loading-text">
+            Preparing your workspace...
+        </p>
 
-                </div>
+    </div>
 
-                <div class="brand-text">
-                    <strong>LeoPDF</strong>
-                    <span>PDF Tools</span>
-                </div>
+</div>
 
-            </div>
 
-            <button
-                class="icon-button"
-                id="notificationButton"
-                aria-label="Notifications"
-            >
-                🔔
-            </button>
 
-        </header>
+<!-- =====================================================
+     APP
+===================================================== -->
 
+<div class="app" id="app">
 
-        <!-- =================================================
-             HOME PAGE
-        ================================================== -->
 
-        <section
-            class="page active-page"
-            id="homePage"
-        >
+    <!-- HEADER -->
 
-            <!-- HERO -->
+    <header class="app-header">
 
-            <div class="hero-card">
+        <div class="brand">
 
-                <div class="hero-content">
+            <div class="small-logo-wrapper">
 
-                    <div class="hero-badge">
-                        ⚡ SMART PDF TOOLS
-                    </div>
-
-                    <h2>
-                        Your PDFs.
-                        <span>Made Simple.</span>
-                    </h2>
-
-                    <p>
-                        Convert, merge, split and manage your
-                        documents easily.
-                    </p>
-
-                    <button
-                        class="primary-button"
-                        id="startButton"
-                    >
-                        <span>Get Started</span>
-                        <span>→</span>
-                    </button>
-
-                </div>
-
-                <div class="hero-icon">
-                    📄
-                </div>
-
-            </div>
-
-
-            <!-- QUICK TOOLS -->
-
-            <div class="section">
-
-                <div class="section-heading">
-
-                    <div>
-                        <span class="section-label">
-                            QUICK ACTIONS
-                        </span>
-
-                        <h3>
-                            PDF Tools
-                        </h3>
-                    </div>
-
-                    <button
-                        class="text-button"
-                        id="viewAllTools"
-                    >
-                        View All
-                    </button>
-
-                </div>
-
-
-                <div class="tools-grid">
-
-                    <!-- IMAGE TO PDF -->
-
-                    <button
-                        class="tool-card image-pdf-tool"
-                        data-tool="imageToPdf"
-                    >
-
-                        <div class="tool-icon purple">
-                            🖼️
-                        </div>
-
-                        <div class="tool-info">
-
-                            <strong>
-                                Image → PDF
-                            </strong>
-
-                            <span>
-                                Convert images
-                            </span>
-
-                        </div>
-
-                        <div class="tool-arrow">
-                            →
-                        </div>
-
-                    </button>
-
-
-                    <!-- PDF TO IMAGE -->
-
-                    <button
-                        class="tool-card"
-                        data-tool="pdfToImage"
-                    >
-
-                        <div class="tool-icon cyan">
-                            📄
-                        </div>
-
-                        <div class="tool-info">
-
-                            <strong>
-                                PDF → Image
-                            </strong>
-
-                            <span>
-                                Extract pages
-                            </span>
-
-                        </div>
-
-                        <div class="tool-arrow">
-                            →
-                        </div>
-
-                    </button>
-
-
-                    <!-- MERGE -->
-
-                    <button
-                        class="tool-card"
-                        data-tool="mergePdf"
-                    >
-
-                        <div class="tool-icon pink">
-                            🔗
-                        </div>
-
-                        <div class="tool-info">
-
-                            <strong>
-                                Merge PDF
-                            </strong>
-
-                            <span>
-                                Join documents
-                            </span>
-
-                        </div>
-
-                        <div class="tool-arrow">
-                            →
-                        </div>
-
-                    </button>
-
-
-                    <!-- SPLIT -->
-
-                    <button
-                        class="tool-card"
-                        data-tool="splitPdf"
-                    >
-
-                        <div class="tool-icon blue">
-                            ✂️
-                        </div>
-
-                        <div class="tool-info">
-
-                            <strong>
-                                Split PDF
-                            </strong>
-
-                            <span>
-                                Separate pages
-                            </span>
-
-                        </div>
-
-                        <div class="tool-arrow">
-                            →
-                        </div>
-
-                    </button>
-
-
-                    <!-- COMPRESS -->
-
-                    <button
-                        class="tool-card"
-                        data-tool="compressPdf"
-                    >
-
-                        <div class="tool-icon green">
-                            🗜️
-                        </div>
-
-                        <div class="tool-info">
-
-                            <strong>
-                                Compress PDF
-                            </strong>
-
-                            <span>
-                                Reduce file size
-                            </span>
-
-                        </div>
-
-                        <div class="tool-arrow">
-                            →
-                        </div>
-
-                    </button>
-
-
-                    <!-- MORE -->
-
-                    <button
-                        class="tool-card"
-                        data-tool="moreTools"
-                    >
-
-                        <div class="tool-icon orange">
-                            ✨
-                        </div>
-
-                        <div class="tool-info">
-
-                            <strong>
-                                More Tools
-                            </strong>
-
-                            <span>
-                                Explore tools
-                            </span>
-
-                        </div>
-
-                        <div class="tool-arrow">
-                            →
-                        </div>
-
-                    </button>
-
-                </div>
-
-            </div>
-
-
-            <!-- RECENT FILES -->
-
-            <div class="section">
-
-                <div class="section-heading">
-
-                    <div>
-                        <span class="section-label">
-                            YOUR DOCUMENTS
-                        </span>
-
-                        <h3>
-                            Recent Files
-                        </h3>
-                    </div>
-
-                    <button
-                        class="text-button"
-                        id="viewFilesButton"
-                    >
-                        View All
-                    </button>
-
-                </div>
-
-
-                <div
-                    class="recent-files"
-                    id="recentFiles"
+                <img
+                    src="file_00000000db748208ae0361855c0a94b9.png"
+                    alt="LeoPDF"
+                    class="small-logo"
                 >
 
-                    <div
-                        class="empty-state"
-                        id="emptyState"
-                    >
+            </div>
 
-                        <div class="empty-icon">
-                            📂
-                        </div>
 
-                        <h4>
-                            No recent files
-                        </h4>
+            <div class="brand-text">
 
-                        <p>
-                            Your created PDFs will appear here.
-                        </p>
+                <strong>LeoPDF</strong>
 
-                    </div>
+                <span>PDF Tools</span>
+
+            </div>
+
+        </div>
+
+
+        <button
+            class="icon-button"
+            id="notificationButton"
+        >
+            🔔
+        </button>
+
+    </header>
+
+
+
+    <!-- =================================================
+         HOME
+    ================================================== -->
+
+    <section
+        class="page active-page"
+        id="homePage"
+    >
+
+
+        <!-- HERO -->
+
+        <div class="hero-card">
+
+            <div class="hero-content">
+
+                <div class="hero-badge">
+                    ⚡ SMART PDF WORKSPACE
+                </div>
+
+
+                <h2>
+                    Your PDFs.
+                    <span>Made Simple.</span>
+                </h2>
+
+
+                <p>
+                    Convert, merge, split, compress and manage
+                    your PDF documents easily.
+                </p>
+
+
+                <button
+                    class="primary-button"
+                    id="heroCreateButton"
+                >
+                    <span>＋ Create PDF</span>
+                    <span>→</span>
+                </button>
+
+            </div>
+
+
+            <div class="hero-icon">
+                📄
+            </div>
+
+        </div>
+
+
+
+        <!-- QUICK ACTIONS -->
+
+        <div class="section">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <span class="section-label">
+                        QUICK ACTIONS
+                    </span>
+
+                    <h3>
+                        Popular Tools
+                    </h3>
 
                 </div>
 
             </div>
 
-        </section>
 
+            <div class="tools-grid">
 
-        <!-- =================================================
-             FILES PAGE
-        ================================================== -->
-
-        <section
-            class="page"
-            id="filesPage"
-        >
-
-            <div class="page-title">
-
-                <span class="section-label">
-                    DOCUMENTS
-                </span>
-
-                <h2>
-                    My Files
-                </h2>
-
-                <p>
-                    Your recent PDF files
-                </p>
-
-            </div>
-
-            <div
-                class="files-list"
-                id="filesList"
-            >
-
-                <div class="empty-state">
-
-                    <div class="empty-icon">
-                        📁
-                    </div>
-
-                    <h4>
-                        No files yet
-                    </h4>
-
-                    <p>
-                        Create a PDF to see it here.
-                    </p>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- =================================================
-             TOOLS PAGE
-        ================================================== -->
-
-        <section
-            class="page"
-            id="toolsPage"
-        >
-
-            <div class="page-title">
-
-                <span class="section-label">
-                    ALL FEATURES
-                </span>
-
-                <h2>
-                    PDF Tools
-                </h2>
-
-                <p>
-                    Everything you need for your documents.
-                </p>
-
-            </div>
-
-
-            <div class="tools-grid tools-page-grid">
 
                 <button
                     class="tool-card"
@@ -517,13 +221,23 @@
                     </div>
 
                     <div class="tool-info">
-                        <strong>Image → PDF</strong>
-                        <span>Convert images to PDF</span>
+
+                        <strong>
+                            Image → PDF
+                        </strong>
+
+                        <span>
+                            Create PDF from images
+                        </span>
+
                     </div>
 
-                    <div class="tool-arrow">→</div>
+                    <span class="tool-arrow">
+                        →
+                    </span>
 
                 </button>
+
 
 
                 <button
@@ -536,13 +250,23 @@
                     </div>
 
                     <div class="tool-info">
-                        <strong>PDF → Image</strong>
-                        <span>Convert PDF pages</span>
+
+                        <strong>
+                            PDF → Image
+                        </strong>
+
+                        <span>
+                            Convert PDF pages
+                        </span>
+
                     </div>
 
-                    <div class="tool-arrow">→</div>
+                    <span class="tool-arrow">
+                        →
+                    </span>
 
                 </button>
+
 
 
                 <button
@@ -555,32 +279,23 @@
                     </div>
 
                     <div class="tool-info">
-                        <strong>Merge PDF</strong>
-                        <span>Combine PDF files</span>
+
+                        <strong>
+                            Merge PDF
+                        </strong>
+
+                        <span>
+                            Combine PDF files
+                        </span>
+
                     </div>
 
-                    <div class="tool-arrow">→</div>
+                    <span class="tool-arrow">
+                        →
+                    </span>
 
                 </button>
 
-
-                <button
-                    class="tool-card"
-                    data-tool="splitPdf"
-                >
-
-                    <div class="tool-icon blue">
-                        ✂️
-                    </div>
-
-                    <div class="tool-info">
-                        <strong>Split PDF</strong>
-                        <span>Split document pages</span>
-                    </div>
-
-                    <div class="tool-arrow">→</div>
-
-                </button>
 
 
                 <button
@@ -593,351 +308,601 @@
                     </div>
 
                     <div class="tool-info">
-                        <strong>Compress PDF</strong>
-                        <span>Reduce PDF size</span>
-                    </div>
-
-                    <div class="tool-arrow">→</div>
-
-                </button>
-
-
-                <button
-                    class="tool-card"
-                    data-tool="moreTools"
-                >
-
-                    <div class="tool-icon orange">
-                        ✨
-                    </div>
-
-                    <div class="tool-info">
-                        <strong>More Tools</strong>
-                        <span>More features</span>
-                    </div>
-
-                    <div class="tool-arrow">→</div>
-
-                </button>
-
-            </div>
-
-        </section>
-
-
-        <!-- =================================================
-             SETTINGS PAGE
-        ================================================== -->
-
-        <section
-            class="page"
-            id="settingsPage"
-        >
-
-            <div class="page-title">
-
-                <span class="section-label">
-                    PREFERENCES
-                </span>
-
-                <h2>
-                    Settings
-                </h2>
-
-                <p>
-                    Customize your LeoPDF experience.
-                </p>
-
-            </div>
-
-
-            <div class="settings-card">
-
-                <div class="setting-row">
-
-                    <div class="setting-icon">
-                        🌙
-                    </div>
-
-                    <div class="setting-info">
 
                         <strong>
-                            Dark Mode
+                            Compress PDF
                         </strong>
 
                         <span>
-                            Premium dark interface
+                            Reduce PDF size
                         </span>
 
                     </div>
 
-                    <label class="switch">
-
-                        <input
-                            type="checkbox"
-                            id="darkModeToggle"
-                            checked
-                        >
-
-                        <span class="slider"></span>
-
-                    </label>
-
-                </div>
-
-
-                <div class="setting-row">
-
-                    <div class="setting-icon">
-                        🔔
-                    </div>
-
-                    <div class="setting-info">
-
-                        <strong>
-                            Notifications
-                        </strong>
-
-                        <span>
-                            Enable app notifications
-                        </span>
-
-                    </div>
-
-                    <label class="switch">
-
-                        <input
-                            type="checkbox"
-                            id="notificationToggle"
-                            checked
-                        >
-
-                        <span class="slider"></span>
-
-                    </label>
-
-                </div>
-
-
-                <button
-                    class="setting-row setting-button"
-                    id="clearHistoryButton"
-                >
-
-                    <div class="setting-icon danger">
-                        🗑️
-                    </div>
-
-                    <div class="setting-info">
-
-                        <strong>
-                            Clear Recent Files
-                        </strong>
-
-                        <span>
-                            Remove local file history
-                        </span>
-
-                    </div>
-
-                    <span class="setting-arrow">
+                    <span class="tool-arrow">
                         →
                     </span>
 
                 </button>
 
-            </div>
-
-
-            <div class="about-card">
-
-                <img
-                    src="file_00000000db748208ae0361855c0a94b9.png"
-                    alt="LeoPDF"
-                    class="about-logo"
-                >
-
-                <h3>
-                    LeoPDF
-                </h3>
-
-                <p>
-                    Convert. Compress. Simplify.
-                </p>
-
-                <span>
-                    Version 1.0.0
-                </span>
 
             </div>
-
-        </section>
-
-    </main>
-
-
-    <!-- =====================================================
-         BOTTOM NAVIGATION
-    ====================================================== -->
-
-    <nav class="bottom-navigation">
-
-        <button
-            class="nav-item active"
-            data-page="homePage"
-        >
-
-            <span class="nav-icon">
-                🏠
-            </span>
-
-            <span>
-                Home
-            </span>
-
-        </button>
-
-
-        <button
-            class="nav-item"
-            data-page="filesPage"
-        >
-
-            <span class="nav-icon">
-                📁
-            </span>
-
-            <span>
-                Files
-            </span>
-
-        </button>
-
-
-        <button
-            class="nav-item"
-            data-page="toolsPage"
-        >
-
-            <span class="nav-icon">
-                ⚡
-            </span>
-
-            <span>
-                Tools
-            </span>
-
-        </button>
-
-
-        <button
-            class="nav-item"
-            data-page="settingsPage"
-        >
-
-            <span class="nav-icon">
-                ⚙️
-            </span>
-
-            <span>
-                Settings
-            </span>
-
-        </button>
-
-    </nav>
-
-
-    <!-- =====================================================
-         IMAGE TO PDF MODAL
-    ====================================================== -->
-
-    <div
-        class="modal"
-        id="imagePdfModal"
-    >
-
-        <div
-            class="modal-overlay"
-            id="modalOverlay"
-        ></div>
-
-
-        <div class="modal-box">
-
-            <button
-                class="modal-close"
-                id="closeModal"
-                aria-label="Close"
-            >
-                ×
-            </button>
-
-
-            <div class="modal-icon">
-                🖼️
-            </div>
-
-            <h2>
-                Image to PDF
-            </h2>
-
-            <p>
-                Select one or more images to create a PDF.
-            </p>
-
-
-            <input
-                type="file"
-                id="imageInput"
-                accept="image/*"
-                multiple
-                hidden
-            >
-
-
-            <button
-                class="secondary-button"
-                id="selectImagesButton"
-            >
-                📷 Select Images
-            </button>
-
-
-            <div
-                class="selected-images"
-                id="selectedImages"
-            ></div>
-
-
-            <button
-                class="primary-button full-button"
-                id="createPdfButton"
-                disabled
-            >
-                <span>📄 Create PDF</span>
-                <span>→</span>
-            </button>
 
         </div>
 
-    </div>
 
 
-    <!-- =====================================================
-         TOAST
-    ====================================================== -->
+        <!-- RECENT -->
+
+        <div class="section">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <span class="section-label">
+                        YOUR DOCUMENTS
+                    </span>
+
+                    <h3>
+                        Recent Files
+                    </h3>
+
+                </div>
+
+
+                <button
+                    class="text-button"
+                    id="openFilesButton"
+                >
+                    View All
+                </button>
+
+            </div>
+
+
+            <div
+                class="recent-files"
+                id="recentFiles"
+            ></div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         FILES
+    ================================================== -->
+
+    <section
+        class="page"
+        id="filesPage"
+    >
+
+        <div class="page-title">
+
+            <span class="section-label">
+                DOCUMENT LIBRARY
+            </span>
+
+            <h2>
+                My Files
+            </h2>
+
+            <p>
+                Your recently created documents.
+            </p>
+
+        </div>
+
+
+        <div
+            class="files-list"
+            id="filesList"
+        ></div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         TOOLS
+    ================================================== -->
+
+    <section
+        class="page"
+        id="toolsPage"
+    >
+
+        <div class="page-title">
+
+            <span class="section-label">
+                ALL FEATURES
+            </span>
+
+            <h2>
+                PDF Tools
+            </h2>
+
+            <p>
+                Powerful tools for everyday PDF work.
+            </p>
+
+        </div>
+
+
+        <div class="tools-page-list">
+
+
+            <button
+                class="large-tool-card"
+                data-tool="imageToPdf"
+            >
+
+                <div class="large-tool-icon purple">
+                    🖼️
+                </div>
+
+                <div>
+                    <strong>Image → PDF</strong>
+                    <span>Convert multiple images into one PDF</span>
+                </div>
+
+                <b>→</b>
+
+            </button>
+
+
+
+            <button
+                class="large-tool-card"
+                data-tool="pdfToImage"
+            >
+
+                <div class="large-tool-icon cyan">
+                    📄
+                </div>
+
+                <div>
+                    <strong>PDF → Image</strong>
+                    <span>Export PDF pages as PNG images</span>
+                </div>
+
+                <b>→</b>
+
+            </button>
+
+
+
+            <button
+                class="large-tool-card"
+                data-tool="mergePdf"
+            >
+
+                <div class="large-tool-icon pink">
+                    🔗
+                </div>
+
+                <div>
+                    <strong>Merge PDF</strong>
+                    <span>Combine multiple PDF documents</span>
+                </div>
+
+                <b>→</b>
+
+            </button>
+
+
+
+            <button
+                class="large-tool-card"
+                data-tool="splitPdf"
+            >
+
+                <div class="large-tool-icon blue">
+                    ✂️
+                </div>
+
+                <div>
+                    <strong>Split PDF</strong>
+                    <span>Extract selected pages</span>
+                </div>
+
+                <b>→</b>
+
+            </button>
+
+
+
+            <button
+                class="large-tool-card"
+                data-tool="compressPdf"
+            >
+
+                <div class="large-tool-icon green">
+                    🗜️
+                </div>
+
+                <div>
+                    <strong>Compress PDF</strong>
+                    <span>Optimize and reduce PDF data</span>
+                </div>
+
+                <b>→</b>
+
+            </button>
+
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         SETTINGS
+    ================================================== -->
+
+    <section
+        class="page"
+        id="settingsPage"
+    >
+
+        <div class="page-title">
+
+            <span class="section-label">
+                PREFERENCES
+            </span>
+
+            <h2>
+                Settings
+            </h2>
+
+            <p>
+                Customize your LeoPDF experience.
+            </p>
+
+        </div>
+
+
+        <div class="settings-card">
+
+
+            <div class="setting-row">
+
+                <div class="setting-icon">
+                    🌙
+                </div>
+
+                <div class="setting-info">
+
+                    <strong>
+                        Dark Mode
+                    </strong>
+
+                    <span>
+                        Premium dark interface
+                    </span>
+
+                </div>
+
+
+                <label class="switch">
+
+                    <input
+                        type="checkbox"
+                        id="darkModeToggle"
+                        checked
+                    >
+
+                    <span class="slider"></span>
+
+                </label>
+
+            </div>
+
+
+
+            <div class="setting-row">
+
+                <div class="setting-icon">
+                    🔔
+                </div>
+
+                <div class="setting-info">
+
+                    <strong>
+                        Notifications
+                    </strong>
+
+                    <span>
+                        App notifications
+                    </span>
+
+                </div>
+
+
+                <label class="switch">
+
+                    <input
+                        type="checkbox"
+                        id="notificationToggle"
+                        checked
+                    >
+
+                    <span class="slider"></span>
+
+                </label>
+
+            </div>
+
+
+
+            <button
+                class="setting-row setting-button"
+                id="clearHistoryButton"
+            >
+
+                <div class="setting-icon danger">
+                    🗑️
+                </div>
+
+                <div class="setting-info">
+
+                    <strong>
+                        Clear Recent Files
+                    </strong>
+
+                    <span>
+                        Delete local history
+                    </span>
+
+                </div>
+
+                <b>
+                    →
+                </b>
+
+            </button>
+
+
+        </div>
+
+
+
+        <div class="about-card">
+
+            <img
+                src="file_00000000db748208ae0361855c0a94b9.png"
+                alt="LeoPDF"
+                class="about-logo"
+            >
+
+            <h3>
+                LeoPDF
+            </h3>
+
+            <p>
+                Convert. Compress. Simplify.
+            </p>
+
+            <span>
+                Version 1.0.0
+            </span>
+
+        </div>
+
+    </section>
+
+
+</div>
+
+
+
+<!-- =====================================================
+     BOTTOM NAVIGATION
+===================================================== -->
+
+<nav class="bottom-navigation">
+
+
+    <button
+        class="nav-item active"
+        data-page="homePage"
+    >
+
+        <span>
+            🏠
+        </span>
+
+        <small>
+            Home
+        </small>
+
+    </button>
+
+
+    <button
+        class="nav-item"
+        data-page="filesPage"
+    >
+
+        <span>
+            📁
+        </span>
+
+        <small>
+            Files
+        </small>
+
+    </button>
+
+
+    <button
+        class="nav-item"
+        data-page="toolsPage"
+    >
+
+        <span>
+            ⚡
+        </span>
+
+        <small>
+            Tools
+        </small>
+
+    </button>
+
+
+    <button
+        class="nav-item"
+        data-page="settingsPage"
+    >
+
+        <span>
+            ⚙️
+        </span>
+
+        <small>
+            Settings
+        </small>
+
+    </button>
+
+
+</nav>
+
+
+
+<!-- =====================================================
+     TOOL MODAL
+===================================================== -->
+
+<div
+    class="modal"
+    id="toolModal"
+>
 
     <div
-        class="toast"
-        id="toast"
-    >
-        <span id="toastIcon">✓</span>
-        <span id="toastMessage">Done</span>
+        class="modal-overlay"
+        id="modalOverlay"
+    ></div>
+
+
+    <div class="modal-box">
+
+        <button
+            class="modal-close"
+            id="modalClose"
+        >
+            ×
+        </button>
+
+
+        <div
+            class="modal-icon"
+            id="modalIcon"
+        >
+            📄
+        </div>
+
+
+        <h2 id="modalTitle">
+            PDF Tool
+        </h2>
+
+
+        <p id="modalDescription">
+            Select your files.
+        </p>
+
+
+        <input
+            type="file"
+            id="fileInput"
+            hidden
+        >
+
+
+        <div
+            class="file-options"
+            id="fileOptions"
+        ></div>
+
+
+        <div
+            class="selected-files"
+            id="selectedFiles"
+        ></div>
+
+
+        <div
+            class="split-options"
+            id="splitOptions"
+        >
+
+            <label>
+                Page numbers
+            </label>
+
+            <input
+                type="text"
+                id="pageNumbers"
+                placeholder="Example: 1,3,5"
+            >
+
+            <small>
+                Enter pages separated by commas.
+            </small>
+
+        </div>
+
+
+        <button
+            class="primary-button full-button"
+            id="modalActionButton"
+        >
+
+            <span>
+                Select File
+            </span>
+
+            <span>
+                →
+            </span>
+
+        </button>
+
     </div>
 
+</div>
 
-    <script src="script.js"></script>
+
+
+<!-- =====================================================
+     TOAST
+===================================================== -->
+
+<div
+    class="toast"
+    id="toast"
+>
+
+    <span id="toastIcon">
+        ✓
+    </span>
+
+    <span id="toastMessage">
+        Done
+    </span>
+
+</div>
+
+
+
+<script src="script.js"></script>
 
 </body>
-    </html>
+                    </html>
