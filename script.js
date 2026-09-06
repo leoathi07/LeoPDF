@@ -1,6 +1,7 @@
 /* =========================================================
-   LeoPDF — COMPLETE SCRIPT.JS
+   LEOPDF — COMPLETE WORKING SCRIPT.JS
    Convert. Compress. Simplify.
+   Matches current index.html + style.css
    ========================================================= */
 
 "use strict";
@@ -10,424 +11,99 @@
    ========================================================= */
 
 const STORAGE = {
-    recentFiles: "leopdf_recent_files",
+    recent: "leopdf_recent_files",
     theme: "leopdf_theme",
     notifications: "leopdf_notifications"
 };
 
-const LOGO_FILE =
-    "file_00000000db748208ae0361855c0a94b9.png";
-
 let currentTool = null;
 let selectedFiles = [];
-let pdfJsReady = false;
-let jsZipPromise = null;
-let jsPdfPromise = null;
-let toastTimer = null;
+let isProcessing = false;
 
+const $ = (id) => document.getElementById(id);
 
-/* =========================================================
-   DOM
-   ========================================================= */
+const TOOL_CONFIG = {
+    imageToPdf: {
+        title: "Image → PDF",
+        description: "Convert multiple images into a single PDF file.",
+        icon: "🖼️",
+        accept: "image/*",
+        multiple: true,
+        action: "Create PDF"
+    },
 
-const $ = selector =>
-    document.querySelector(selector);
+    pdfToImage: {
+        title: "PDF → Image",
+        description: "Convert PDF pages into high-quality images.",
+        icon: "📄",
+        accept: ".pdf,application/pdf",
+        multiple: false,
+        action: "Convert to Images"
+    },
 
-const $$ = selector =>
-    Array.from(document.querySelectorAll(selector));
+    mergePdf: {
+        title: "Merge PDF",
+        description: "Combine multiple PDF files into one PDF.",
+        icon: "🔗",
+        accept: ".pdf,application/pdf",
+        multiple: true,
+        action: "Merge PDFs"
+    },
 
+    splitPdf: {
+        title: "Split PDF",
+        description: "Extract selected pages from a PDF.",
+        icon: "✂️",
+        accept: ".pdf,application/pdf",
+        multiple: false,
+        action: "Split PDF"
+    },
 
-/* =========================================================
-   TOAST
-   ========================================================= */
-
-function showToast(message, type = "normal") {
-
-    const toast = $("#toast");
-
-    if (!toast) {
-        console.log(message);
-        return;
+    compressPdf: {
+        title: "Compress PDF",
+        description: "Optimize and re-save your PDF.",
+        icon: "🗜️",
+        accept: ".pdf,application/pdf",
+        multiple: false,
+        action: "Compress PDF"
     }
-
-    const icon = $("#toastIcon");
-    const messageBox = $("#toastMessage");
-
-    toast.classList.remove(
-        "show",
-        "success",
-        "error"
-    );
-
-    if (type === "success") {
-        toast.classList.add("success");
-    }
-
-    if (type === "error") {
-        toast.classList.add("error");
-    }
-
-    if (icon) {
-        icon.textContent =
-            type === "success"
-                ? "✓"
-                : type === "error"
-                    ? "!"
-                    : "i";
-    }
-
-    if (messageBox) {
-        messageBox.textContent = message;
-    } else {
-        toast.textContent = message;
-    }
-
-    void toast.offsetWidth;
-
-    toast.classList.add("show");
-
-    clearTimeout(toastTimer);
-
-    toastTimer = setTimeout(() => {
-        toast.classList.remove("show");
-    }, 3000);
-}
-
+};
 
 /* =========================================================
-   HTML ESCAPE
+   INITIALIZATION
    ========================================================= */
 
-function escapeHTML(value) {
+document.addEventListener("DOMContentLoaded", () => {
 
-    return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
-
-
-/* =========================================================
-   FILE SIZE
-   ========================================================= */
-
-function formatFileSize(bytes) {
-
-    bytes = Number(bytes);
-
-    if (!Number.isFinite(bytes) || bytes <= 0) {
-        return "0 B";
-    }
-
-    const units = [
-        "B",
-        "KB",
-        "MB",
-        "GB"
-    ];
-
-    const index = Math.min(
-        Math.floor(
-            Math.log(bytes) /
-            Math.log(1024)
-        ),
-        units.length - 1
-    );
-
-    return (
-        bytes /
-        Math.pow(1024, index)
-    ).toFixed(
-        index === 0 ? 0 : 2
-    ) + " " + units[index];
-}
-
-
-/* =========================================================
-   DOWNLOAD
-   ========================================================= */
-
-function downloadBlob(blob, filename) {
-
-    if (!blob) {
-        throw new Error("File is empty");
-    }
-
-    const url =
-        URL.createObjectURL(blob);
-
-    const link =
-        document.createElement("a");
-
-    link.href = url;
-    link.download = filename;
-    link.style.display = "none";
-
-    document.body.appendChild(link);
-
-    link.click();
-
-    link.remove();
-
-    setTimeout(() => {
-        URL.revokeObjectURL(url);
-    }, 1500);
-}
-
-
-/* =========================================================
-   DATE
-   ========================================================= */
-
-function getDateName() {
-
-    const now = new Date();
-
-    const pad = number =>
-        String(number).padStart(2, "0");
-
-    return (
-        now.getFullYear() +
-        "-" +
-        pad(now.getMonth() + 1) +
-        "-" +
-        pad(now.getDate()) +
-        "_" +
-        pad(now.getHours()) +
-        "-" +
-        pad(now.getMinutes()) +
-        "-" +
-        pad(now.getSeconds())
-    );
-}
-
-
-/* =========================================================
-   REMOVE EXTENSION
-   ========================================================= */
-
-function removeExtension(name) {
-
-    return String(name)
-        .replace(/\.[^/.]+$/, "");
-}
-
-
-/* =========================================================
-   RECENT FILE STORAGE
-   ========================================================= */
-
-function getRecentFiles() {
+    console.log("LeoPDF starting...");
 
     try {
 
-        const data =
-            localStorage.getItem(
-                STORAGE.recentFiles
-            );
+        setupSplash();
+        setupNavigation();
+        setupTools();
+        setupModal();
+        setupFileInput();
+        setupButtons();
+        setupSettings();
+        setupNotifications();
 
-        if (!data) {
-            return [];
-        }
-
-        const files =
-            JSON.parse(data);
-
-        return Array.isArray(files)
-            ? files
-            : [];
-
-    } catch (error) {
-
-        console.error(
-            "Recent files error:",
-            error
-        );
-
-        return [];
-    }
-}
-
-
-function saveRecentFile(
-    name,
-    type,
-    size
-) {
-
-    try {
-
-        const files =
-            getRecentFiles();
-
-        files.unshift({
-            name: name,
-            type: type,
-            size: size || 0,
-            date:
-                new Date().toISOString()
-        });
-
-        const unique = [];
-
-        files.forEach(file => {
-
-            const exists =
-                unique.some(item =>
-                    item.name === file.name &&
-                    item.type === file.type
-                );
-
-            if (!exists) {
-                unique.push(file);
-            }
-        });
-
-        localStorage.setItem(
-            STORAGE.recentFiles,
-            JSON.stringify(
-                unique.slice(0, 20)
-            )
-        );
-
+        loadTheme();
         renderRecentFiles();
+        renderFilesPage();
+
+        console.log("LeoPDF ready.");
 
     } catch (error) {
 
-        console.error(
-            "Save recent file error:",
-            error
+        console.error("LeoPDF initialization error:", error);
+
+        showToast(
+            "App loading error. Please refresh.",
+            "error"
         );
     }
-}
-
-
-/* =========================================================
-   RENDER RECENT FILES
-   ========================================================= */
-
-function renderRecentFiles() {
-
-    const recentContainer =
-        $("#recentFiles");
-
-    const filesContainer =
-        $("#filesList");
-
-    const files =
-        getRecentFiles();
-
-
-    function createHTML(list) {
-
-        if (!list.length) {
-
-            return `
-                <div class="empty-state">
-                    <div class="empty-icon">📄</div>
-                    <h3>No Recent Files</h3>
-                    <p>
-                        Your converted files
-                        will appear here.
-                    </p>
-                </div>
-            `;
-        }
-
-        return list.map(file => {
-
-            let dateText = "";
-
-            try {
-
-                const date =
-                    new Date(file.date);
-
-                if (!Number.isNaN(date.getTime())) {
-
-                    dateText =
-                        date.toLocaleDateString();
-                }
-
-            } catch {
-                dateText = "";
-            }
-
-            return `
-                <div class="recent-file-item">
-
-                    <div class="recent-file-icon">
-                        📄
-                    </div>
-
-                    <div class="recent-file-info">
-
-                        <strong>
-                            ${escapeHTML(file.name)}
-                        </strong>
-
-                        <span>
-                            ${escapeHTML(
-                                file.type || "PDF"
-                            )}
-
-                            ${
-                                file.size
-                                    ? " • " +
-                                      formatFileSize(
-                                          file.size
-                                      )
-                                    : ""
-                            }
-                        </span>
-
-                    </div>
-
-                    <div class="recent-file-date">
-                        ${dateText}
-                    </div>
-
-                </div>
-            `;
-
-        }).join("");
-    }
-
-
-    if (recentContainer) {
-        recentContainer.innerHTML =
-            createHTML(
-                files.slice(0, 5)
-            );
-    }
-
-
-    if (filesContainer) {
-        filesContainer.innerHTML =
-            createHTML(files);
-    }
-}
-
-
-/* =========================================================
-   CLEAR HISTORY
-   ========================================================= */
-
-function clearHistory() {
-
-    localStorage.removeItem(
-        STORAGE.recentFiles
-    );
-
-    renderRecentFiles();
-
-    showToast(
-        "History cleared successfully",
-        "success"
-    );
-}
+});
 
 
 /* =========================================================
@@ -436,98 +112,57 @@ function clearHistory() {
 
 function setupSplash() {
 
-    const splash =
-        $("#splashScreen");
-
-    const logo =
-        $("#splashLogo");
-
-    const fallback =
-        $("#logoFallback");
+    const splash = $("splashScreen");
+    const app = $("app");
+    const logo = $("splashLogo");
+    const fallback = $("logoFallback");
 
     if (logo) {
 
-        logo.addEventListener(
-            "error",
-            () => {
+        logo.addEventListener("error", () => {
 
-                logo.style.display =
-                    "none";
-
-                if (fallback) {
-                    fallback.style.display =
-                        "flex";
-                }
-            }
-        );
-
-        logo.addEventListener(
-            "load",
-            () => {
-
-                logo.style.display =
-                    "block";
-
-                if (fallback) {
-                    fallback.style.display =
-                        "none";
-                }
-            }
-        );
-
-        if (
-            logo.complete &&
-            logo.naturalWidth === 0
-        ) {
-
-            logo.style.display =
-                "none";
+            logo.style.display = "none";
 
             if (fallback) {
-                fallback.style.display =
-                    "flex";
+                fallback.style.display = "flex";
             }
-        }
+        });
+
+        logo.addEventListener("load", () => {
+
+            logo.style.display = "block";
+
+            if (fallback) {
+                fallback.style.display = "none";
+            }
+        });
     }
 
+    if (app) {
+        app.style.display = "none";
+    }
 
     setTimeout(() => {
 
-        if (!splash) {
-            showApp();
-            return;
+        if (splash) {
+            splash.classList.add("hide");
         }
-
-        splash.classList.add("hide");
 
         setTimeout(() => {
 
-            splash.style.display =
-                "none";
+            if (splash) {
+                splash.style.display = "none";
+            }
 
-            showApp();
+            if (app) {
+                app.style.display = "block";
+            }
+
+            showPage("homePage");
 
         }, 500);
 
     }, 2200);
-}
-
-
-/* =========================================================
-   SHOW APP
-   ========================================================= */
-
-function showApp() {
-
-    const app =
-        $("#app");
-
-    if (!app) {
-        return;
-    }
-
-    app.style.display =
-        "block";
 }
 
 
@@ -537,73 +172,37 @@ function showApp() {
 
 function showPage(pageId) {
 
-    const pages = [
-        "#homePage",
-        "#filesPage",
-        "#toolsPage",
-        "#settingsPage"
-    ];
+    const pages = document.querySelectorAll(".page");
 
-    pages.forEach(selector => {
-
-        const page =
-            $(selector);
-
-        if (!page) {
-            return;
-        }
-
-        page.classList.remove(
-            "active-page"
-        );
-
-        page.style.display =
-            "none";
+    pages.forEach(page => {
+        page.classList.remove("active-page");
+        page.style.display = "none";
     });
 
-
-    const target =
-        $("#" + pageId);
+    const target = $(pageId);
 
     if (target) {
 
-        target.classList.add(
-            "active-page"
-        );
+        target.classList.add("active-page");
+        target.style.display = "block";
 
-        target.style.display =
-            "block";
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+
+    } else {
+
+        console.warn("Page not found:", pageId);
     }
 
+    document.querySelectorAll(".bottom-nav-item").forEach(item => {
 
-    $$(".bottom-nav-item").forEach(
-        item => {
+        item.classList.remove("active");
 
-            item.classList.remove(
-                "active"
-            );
-
-            if (
-                item.dataset.page ===
-                pageId
-            ) {
-
-                item.classList.add(
-                    "active"
-                );
-            }
+        if (item.dataset.page === pageId) {
+            item.classList.add("active");
         }
-    );
-
-
-    if (pageId === "filesPage") {
-        renderRecentFiles();
-    }
-
-
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
     });
 }
 
@@ -614,427 +213,265 @@ function showPage(pageId) {
 
 function setupNavigation() {
 
-    $$(".bottom-nav-item").forEach(
-        item => {
+    document.querySelectorAll(".bottom-nav-item").forEach(item => {
 
-            item.addEventListener(
-                "click",
-                event => {
+        item.addEventListener("click", () => {
 
-                    event.preventDefault();
+            const page = item.dataset.page;
 
-                    const page =
-                        item.dataset.page;
+            if (page) {
+                showPage(page);
 
-                    if (page) {
-                        showPage(page);
-                    }
+                if (page === "filesPage") {
+                    renderFilesPage();
                 }
-            );
-        }
-    );
+            }
+        });
+    });
 
+    const openFiles = $("openFilesButton");
 
-    showPage("homePage");
+    if (openFiles) {
+
+        openFiles.addEventListener("click", () => {
+            showPage("filesPage");
+            renderFilesPage();
+        });
+    }
+
+    const heroButton = $("heroCreateButton");
+
+    if (heroButton) {
+
+        heroButton.addEventListener("click", () => {
+            openTool("imageToPdf");
+        });
+    }
+
+    /* Home default */
+    setTimeout(() => {
+        showPage("homePage");
+    }, 50);
 }
 
 
 /* =========================================================
-   TOOL CONFIGURATION
+   TOOL CARDS
    ========================================================= */
 
-function getToolConfig(tool) {
+function setupTools() {
 
-    const configs = {
+    document.querySelectorAll("[data-tool]").forEach(card => {
 
-        imageToPdf: {
+        card.addEventListener("click", () => {
 
-            title:
-                "Image → PDF",
+            const tool = card.dataset.tool;
 
-            description:
-                "Convert multiple images into one PDF.",
+            if (!TOOL_CONFIG[tool]) {
+                console.warn("Unknown tool:", tool);
+                return;
+            }
 
-            icon:
-                "🖼️",
-
-            accept:
-                "image/*",
-
-            multiple:
-                true,
-
-            action:
-                "Create PDF"
-        },
-
-
-        pdfToImage: {
-
-            title:
-                "PDF → Image",
-
-            description:
-                "Convert PDF pages into high-quality images.",
-
-            icon:
-                "📄",
-
-            accept:
-                ".pdf,application/pdf",
-
-            multiple:
-                false,
-
-            action:
-                "Convert to Images"
-        },
-
-
-        mergePdf: {
-
-            title:
-                "Merge PDF",
-
-            description:
-                "Combine multiple PDF files into one PDF.",
-
-            icon:
-                "🔗",
-
-            accept:
-                ".pdf,application/pdf",
-
-            multiple:
-                true,
-
-            action:
-                "Merge PDFs"
-        },
-
-
-        splitPdf: {
-
-            title:
-                "Split PDF",
-
-            description:
-                "Extract selected pages from a PDF.",
-
-            icon:
-                "✂️",
-
-            accept:
-                ".pdf,application/pdf",
-
-            multiple:
-                false,
-
-            action:
-                "Split PDF"
-        },
-
-
-        compressPdf: {
-
-            title:
-                "Compress PDF",
-
-            description:
-                "Optimize and re-save your PDF.",
-
-            icon:
-                "📦",
-
-            accept:
-                ".pdf,application/pdf",
-
-            multiple:
-                false,
-
-            action:
-                "Compress PDF"
-        }
-
-    };
-
-    return configs[tool] || null;
+            openTool(tool);
+        });
+    });
 }
 
 
 /* =========================================================
-   TOOL MODAL
+   OPEN TOOL
    ========================================================= */
 
 function openTool(tool) {
 
-    const config =
-        getToolConfig(tool);
+    const config = TOOL_CONFIG[tool];
 
-    const modal =
-        $("#toolModal");
-
-    if (!config || !modal) {
-
-        showToast(
-            "Tool is not available",
-            "error"
-        );
-
+    if (!config) {
+        showToast("Tool not available.", "error");
         return;
     }
 
+    const modal = $("toolModal");
 
-    currentTool =
-        tool;
-
-    selectedFiles =
-        [];
-
-
-    const icon =
-        $("#modalIcon");
-
-    const title =
-        $("#modalTitle");
-
-    const description =
-        $("#modalDescription");
-
-    const input =
-        $("#fileInput");
-
-    const options =
-        $("#fileOptions");
-
-    const selected =
-        $("#selectedFiles");
-
-    const splitOptions =
-        $("#splitOptions");
-
-    const pageNumbers =
-        $("#pageNumbers");
-
-    const action =
-        $("#modalActionButton");
-
-
-    if (icon) {
-        icon.textContent =
-            config.icon;
+    if (!modal) {
+        showToast("Tool window not found.", "error");
+        return;
     }
 
+    currentTool = tool;
+    selectedFiles = [];
+
+    const title = $("modalTitle");
+    const description = $("modalDescription");
+    const icon = $("modalIcon");
+    const input = $("fileInput");
+    const options = $("fileOptions");
+    const splitOptions = $("splitOptions");
+    const selectedContainer = $("selectedFiles");
+    const actionButton = $("modalActionButton");
+
     if (title) {
-        title.textContent =
-            config.title;
+        title.textContent = config.title;
     }
 
     if (description) {
-        description.textContent =
-            config.description;
+        description.textContent = config.description;
     }
 
+    if (icon) {
+        icon.textContent = config.icon;
+    }
 
     if (input) {
 
         input.value = "";
+        input.accept = config.accept;
+        input.multiple = config.multiple;
 
-        input.accept =
-            config.accept;
-
-        input.multiple =
-            config.multiple;
+        if (tool === "imageToPdf") {
+            input.setAttribute("accept", "image/*");
+        }
     }
-
 
     if (options) {
         options.innerHTML = "";
     }
 
+    if (splitOptions) {
+        splitOptions.classList.remove("show");
+        splitOptions.innerHTML = "";
+    }
 
-    if (selected) {
-        selected.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-icon">
-                    📄
-                </div>
-                <p>
-                    No file selected.
-                </p>
+    createToolOptions(tool);
+
+    if (actionButton) {
+        actionButton.textContent = config.action;
+        actionButton.disabled = false;
+    }
+
+    renderSelectedFiles();
+
+    modal.classList.add("show");
+}
+
+
+/* =========================================================
+   TOOL OPTIONS
+   ========================================================= */
+
+function createToolOptions(tool) {
+
+    const options = $("fileOptions");
+
+    if (!options) {
+        return;
+    }
+
+    if (tool === "pdfToImage") {
+
+        options.innerHTML = `
+            <div class="option-group">
+                <label for="pageNumbers">Page Range</label>
+
+                <input
+                    id="pageNumbers"
+                    type="text"
+                    placeholder="Example: 1-3 or 1,3,5"
+                />
+
+                <small>
+                    Leave empty to convert all pages.
+                </small>
+            </div>
+
+            <div class="option-group">
+                <label for="imageFormat">Image Format</label>
+
+                <select id="imageFormat">
+                    <option value="png">PNG</option>
+                    <option value="jpeg">JPG</option>
+                </select>
+            </div>
+
+            <div class="option-group">
+                <label for="imageQuality">Quality</label>
+
+                <select id="imageQuality">
+                    <option value="1.5">Standard</option>
+                    <option value="2">High</option>
+                    <option value="2.5">Very High</option>
+                </select>
             </div>
         `;
     }
 
-
-    if (splitOptions) {
-
-        splitOptions.classList.remove(
-            "show"
-        );
-
-        splitOptions.style.display =
-            "none";
-    }
-
-
-    if (pageNumbers) {
-        pageNumbers.value = "";
-    }
-
-
-    if (tool === "pdfToImage") {
-
-        if (options) {
-
-            options.innerHTML = `
-
-                <div class="option-group">
-
-                    <label>
-                        Page Range
-                    </label>
-
-                    <input
-                        id="pdfPageRange"
-                        type="text"
-                        placeholder="Example: 1-3 or 1,3,5"
-                    >
-
-                    <small>
-                        Leave empty for all pages.
-                    </small>
-
-                </div>
-
-
-                <div class="option-group">
-
-                    <label>
-                        Image Format
-                    </label>
-
-                    <select id="pdfImageFormat">
-
-                        <option value="png">
-                            PNG
-                        </option>
-
-                        <option value="jpeg">
-                            JPG
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="option-group">
-
-                    <label>
-                        Quality
-                    </label>
-
-                    <select id="pdfImageScale">
-
-                        <option value="1.5">
-                            Standard
-                        </option>
-
-                        <option value="2">
-                            High
-                        </option>
-
-                        <option value="2.5">
-                            Very High
-                        </option>
-
-                    </select>
-
-                </div>
-            `;
-        }
-    }
-
-
     if (tool === "mergePdf") {
 
-        if (options) {
-
-            options.innerHTML = `
-                <div class="option-group">
-                    <small>
-                        Select 2 or more PDF files.
-                    </small>
-                </div>
-            `;
-        }
+        options.innerHTML = `
+            <div class="option-group">
+                <small>
+                    Select two or more PDF files.
+                </small>
+            </div>
+        `;
     }
-
-
-    if (tool === "compressPdf") {
-
-        if (options) {
-
-            options.innerHTML = `
-
-                <div class="option-group">
-
-                    <label>
-                        Compression Level
-                    </label>
-
-                    <select id="compressLevel">
-
-                        <option value="normal">
-                            Normal
-                        </option>
-
-                        <option value="high">
-                            High
-                        </option>
-
-                    </select>
-
-                    <small>
-                        Result depends on the
-                        original PDF.
-                    </small>
-
-                </div>
-            `;
-        }
-    }
-
 
     if (tool === "splitPdf") {
 
-        if (splitOptions) {
+        const split = $("splitOptions");
 
-            splitOptions.style.display =
-                "block";
+        if (split) {
 
-            splitOptions.classList.add(
-                "show"
-            );
+            split.classList.add("show");
+
+            split.innerHTML = `
+                <div class="option-group">
+                    <label for="pageNumbers">Pages</label>
+
+                    <input
+                        id="pageNumbers"
+                        type="text"
+                        placeholder="Example: 1-3 or 1,4,6"
+                    />
+
+                    <small>
+                        Example: 1-3 extracts pages 1, 2 and 3.
+                    </small>
+                </div>
+            `;
         }
     }
 
+    if (tool === "compressPdf") {
 
-    if (action) {
+        options.innerHTML = `
+            <div class="option-group">
+                <label for="compressLevel">
+                    Compression
+                </label>
 
-        action.textContent =
-            config.action;
+                <select id="compressLevel">
+                    <option value="normal">Normal</option>
+                    <option value="high">High</option>
+                </select>
 
-        action.style.display =
-            "block";
+                <small>
+                    Results depend on the original PDF.
+                </small>
+            </div>
+        `;
     }
 
+    if (tool === "imageToPdf") {
 
-    modal.classList.add("show");
-
-    document.body.style.overflow =
-        "hidden";
+        options.innerHTML = `
+            <div class="option-group">
+                <small>
+                    Select multiple images. Each image will become a PDF page.
+                </small>
+            </div>
+        `;
+    }
 }
 
 
@@ -1042,63 +479,59 @@ function openTool(tool) {
    CLOSE MODAL
    ========================================================= */
 
-function closeToolModal() {
+function closeTool() {
 
-    const modal =
-        $("#toolModal");
+    const modal = $("toolModal");
 
     if (modal) {
-
-        modal.classList.remove(
-            "show"
-        );
+        modal.classList.remove("show");
     }
 
-    currentTool =
-        null;
+    currentTool = null;
+    selectedFiles = [];
 
-    selectedFiles =
-        [];
-
-
-    const input =
-        $("#fileInput");
+    const input = $("fileInput");
 
     if (input) {
         input.value = "";
     }
-
-
-    document.body.style.overflow =
-        "";
 }
 
 
 /* =========================================================
-   TOOL CARD EVENTS
+   MODAL EVENTS
    ========================================================= */
 
-function setupToolCards() {
+function setupModal() {
 
-    $$("[data-tool]").forEach(
-        card => {
+    const modal = $("toolModal");
+    const overlay = $("modalOverlay");
+    const closeButton = $("modalClose");
 
-            card.addEventListener(
-                "click",
-                event => {
+    if (closeButton) {
+        closeButton.addEventListener("click", closeTool);
+    }
 
-                    event.preventDefault();
+    if (overlay) {
+        overlay.addEventListener("click", closeTool);
+    }
 
-                    const tool =
-                        card.dataset.tool;
+    if (modal) {
 
-                    if (tool) {
-                        openTool(tool);
-                    }
-                }
-            );
+        modal.addEventListener("click", event => {
+
+            if (event.target === modal) {
+                closeTool();
+            }
+        });
+    }
+
+    document.addEventListener("keydown", event => {
+
+        if (event.key === "Escape") {
+            closeTool();
         }
-    );
+    });
 }
 
 
@@ -1108,245 +541,286 @@ function setupToolCards() {
 
 function setupFileInput() {
 
-    const input =
-        $("#fileInput");
+    const input = $("fileInput");
 
     if (!input) {
         return;
     }
 
+    input.addEventListener("change", event => {
 
-    input.addEventListener(
-        "change",
-        async event => {
+        const files = Array.from(
+            event.target.files || []
+        );
 
-            const files =
-                Array.from(
-                    event.target.files || []
-                );
-
-            if (!files.length) {
-                return;
-            }
-
-
-            if (
-                currentTool ===
-                "imageToPdf"
-            ) {
-
-                selectedFiles =
-                    files.filter(
-                        file =>
-                            file.type.startsWith(
-                                "image/"
-                            )
-                    );
-
-            } else {
-
-                selectedFiles =
-                    files.filter(
-                        file =>
-                            file.type ===
-                                "application/pdf" ||
-                            file.name
-                                .toLowerCase()
-                                .endsWith(".pdf")
-                    );
-            }
-
-
-            renderSelectedFiles();
-
-
-            if (
-                currentTool === "splitPdf" &&
-                selectedFiles.length
-            ) {
-
-                await showPageCount(
-                    selectedFiles[0]
-                );
-            }
-
-
-            input.value = "";
+        if (!files.length) {
+            return;
         }
-    );
+
+        if (currentTool === "imageToPdf") {
+
+            selectedFiles = files.filter(
+                file => file.type.startsWith("image/")
+            );
+
+        } else if (
+            currentTool === "mergePdf"
+        ) {
+
+            selectedFiles = files.filter(
+                file =>
+                    file.type === "application/pdf" ||
+                    file.name.toLowerCase().endsWith(".pdf")
+            );
+
+        } else {
+
+            selectedFiles = files.slice(0, 1);
+        }
+
+        renderSelectedFiles();
+
+        input.value = "";
+    });
 }
 
 
 /* =========================================================
-   SELECTED FILES
+   RENDER SELECTED FILES
    ========================================================= */
 
 function renderSelectedFiles() {
 
-    const container =
-        $("#selectedFiles");
+    const container = $("selectedFiles");
 
     if (!container) {
         return;
     }
 
-
     if (!selectedFiles.length) {
 
         container.innerHTML = `
             <div class="empty-state">
-                <div class="empty-icon">
-                    📄
-                </div>
-                <p>
-                    No file selected.
-                </p>
+                <div class="empty-icon">📄</div>
+                <p>Select your file</p>
             </div>
         `;
 
         return;
     }
 
+    container.innerHTML = "";
 
-    container.innerHTML =
-        selectedFiles.map(
-            (file, index) => `
+    selectedFiles.forEach((file, index) => {
 
-                <div class="selected-file">
+        const item = document.createElement("div");
 
-                    <div class="selected-file-icon">
-                        ${
-                            file.type.startsWith(
-                                "image/"
-                            )
-                                ? "🖼️"
-                                : "📄"
-                        }
-                    </div>
+        item.className = "selected-file";
 
-                    <div class="selected-file-info">
+        item.innerHTML = `
+            <div class="selected-file-icon">
+                ${file.type.startsWith("image/") ? "🖼️" : "📄"}
+            </div>
 
-                        <strong>
-                            ${escapeHTML(
-                                file.name
-                            )}
-                        </strong>
+            <div class="selected-file-info">
+                <strong>${escapeHTML(file.name)}</strong>
+                <span>${formatSize(file.size)}</span>
+            </div>
 
-                        <span>
-                            ${formatFileSize(
-                                file.size
-                            )}
-                        </span>
+            <button
+                type="button"
+                class="remove-file"
+                aria-label="Remove file">
+                ×
+            </button>
+        `;
 
-                    </div>
+        const removeButton =
+            item.querySelector(".remove-file");
 
-                    <button
-                        type="button"
-                        class="remove-file"
-                        data-index="${index}"
-                        aria-label="Remove file"
-                    >
-                        ×
-                    </button>
+        if (removeButton) {
 
-                </div>
-            `
-        ).join("");
-
-
-    $$(".remove-file").forEach(
-        button => {
-
-            button.addEventListener(
+            removeButton.addEventListener(
                 "click",
                 () => {
 
-                    const index =
-                        Number(
-                            button.dataset.index
-                        );
+                    selectedFiles.splice(index, 1);
 
-                    if (
-                        Number.isInteger(index)
-                    ) {
-
-                        selectedFiles.splice(
-                            index,
-                            1
-                        );
-
-                        renderSelectedFiles();
-                    }
+                    renderSelectedFiles();
                 }
             );
         }
-    );
+
+        container.appendChild(item);
+    });
+}
+
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+function setupButtons() {
+
+    const actionButton = $("modalActionButton");
+
+    if (actionButton) {
+
+        actionButton.addEventListener(
+            "click",
+            runTool
+        );
+    }
+
+    const clearHistory = $("clearHistoryButton");
+
+    if (clearHistory) {
+
+        clearHistory.addEventListener(
+            "click",
+            clearHistoryData
+        );
+    }
+}
+
+
+/* =========================================================
+   RUN TOOL
+   ========================================================= */
+
+async function runTool() {
+
+    if (isProcessing) {
+        return;
+    }
+
+    if (!currentTool) {
+        return;
+    }
+
+    if (!selectedFiles.length) {
+
+        showToast(
+            "Please select a file first.",
+            "error"
+        );
+
+        return;
+    }
+
+    isProcessing = true;
+
+    const button = $("modalActionButton");
+
+    const originalText =
+        button ? button.textContent : "";
+
+    if (button) {
+        button.disabled = true;
+        button.textContent = "Processing...";
+    }
+
+    try {
+
+        switch (currentTool) {
+
+            case "imageToPdf":
+                await imageToPDF();
+                break;
+
+            case "pdfToImage":
+                await pdfToImages();
+                break;
+
+            case "mergePdf":
+                await mergePDF();
+                break;
+
+            case "splitPdf":
+                await splitPDF();
+                break;
+
+            case "compressPdf":
+                await compressPDF();
+                break;
+
+            default:
+                throw new Error("Unknown tool.");
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        showToast(
+            error.message || "Operation failed.",
+            "error"
+        );
+
+    } finally {
+
+        isProcessing = false;
+
+        if (button) {
+            button.disabled = false;
+            button.textContent = originalText;
+        }
+    }
 }
 
 
 /* =========================================================
    IMAGE → PDF
-========================================================= */
+   ========================================================= */
 
 async function imageToPDF() {
 
-    if (!selectedFiles.length) {
+    const jsPDF = await loadJsPDF();
 
-        throw new Error(
-            "Please select at least one image"
-        );
+    if (!jsPDF) {
+        throw new Error("PDF library could not be loaded.");
     }
 
+    const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
+    });
 
-    const jsPDF =
-        await loadJsPDF();
+    for (let i = 0; i < selectedFiles.length; i++) {
 
-
-    const pdf =
-        new jsPDF({
-            unit: "mm",
-            format: "a4"
-        });
-
-
-    for (
-        let i = 0;
-        i < selectedFiles.length;
-        i++
-    ) {
-
-        const file =
-            selectedFiles[i];
+        const file = selectedFiles[i];
 
         const dataURL =
-            await readAsDataURL(file);
+            await fileToDataURL(file);
 
         const image =
             await loadImage(dataURL);
 
+        if (i > 0) {
+
+            const orientation =
+                image.width > image.height
+                    ? "landscape"
+                    : "portrait";
+
+            pdf.addPage("a4", orientation);
+        }
 
         const orientation =
-            image.width >= image.height
+            image.width > image.height
                 ? "landscape"
                 : "portrait";
 
+        if (i === 0) {
 
-        if (i > 0) {
-
-            pdf.addPage(
-                "a4",
-                orientation
-            );
-
-        } else {
-
-            pdf.setPage(1);
-
-            pdf.internal.pageSize =
-                pdf.internal.getPageSize();
-
+            if (
+                orientation === "landscape"
+            ) {
+                pdf.deletePage(1);
+                pdf.addPage("a4", "landscape");
+            }
         }
-
 
         const pageWidth =
             orientation === "landscape"
@@ -1358,31 +832,25 @@ async function imageToPDF() {
                 ? 210
                 : 297;
 
-
         const margin = 8;
 
         const maxWidth =
-            pageWidth -
-            margin * 2;
+            pageWidth - margin * 2;
 
         const maxHeight =
-            pageHeight -
-            margin * 2;
+            pageHeight - margin * 2;
 
-
-        const ratio =
+        const scale =
             Math.min(
                 maxWidth / image.width,
                 maxHeight / image.height
             );
 
-
         const width =
-            image.width * ratio;
+            image.width * scale;
 
         const height =
-            image.height * ratio;
-
+            image.height * scale;
 
         const x =
             (pageWidth - width) / 2;
@@ -1390,12 +858,10 @@ async function imageToPDF() {
         const y =
             (pageHeight - height) / 2;
 
-
         const format =
             file.type === "image/png"
                 ? "PNG"
                 : "JPEG";
-
 
         pdf.addImage(
             dataURL,
@@ -1409,276 +875,228 @@ async function imageToPDF() {
         );
     }
 
-
     const blob =
         pdf.output("blob");
 
-
     const filename =
-        `LeoPDF_${getDateName()}.pdf`;
+        `LeoPDF_${dateName()}.pdf`;
 
+    downloadBlob(blob, filename);
 
-    downloadBlob(
-        blob,
-        filename
-    );
-
-
-    saveRecentFile(
+    addRecentFile(
         filename,
         "Image → PDF",
         blob.size
     );
+
+    showToast(
+        "PDF created successfully!",
+        "success"
+    );
+
+    closeTool();
 }
 
 
 /* =========================================================
    PDF → IMAGE
-========================================================= */
+   ========================================================= */
 
-async function pdfToImage(file) {
+async function pdfToImages() {
 
-    const pdfjs =
-        await loadPDFJS();
+    const pdfjsLib = await getPDFJS();
 
+    if (!pdfjsLib) {
+        throw new Error("PDF renderer could not be loaded.");
+    }
 
-    const buffer =
-        await file.arrayBuffer();
+    const file = selectedFiles[0];
 
+    const data =
+        new Uint8Array(
+            await file.arrayBuffer()
+        );
 
     const pdf =
-        await pdfjs.getDocument({
-            data: buffer
-        }).promise;
-
+        await pdfjsLib
+            .getDocument({ data })
+            .promise;
 
     const rangeInput =
-        $("#pdfPageRange");
-
-    const formatInput =
-        $("#pdfImageFormat");
-
-    const scaleInput =
-        $("#pdfImageScale");
-
+        $("pageNumbers");
 
     const range =
         rangeInput
             ? rangeInput.value.trim()
             : "";
 
-
-    const format =
-        formatInput
-            ? formatInput.value
-            : "png";
-
-
-    const scale =
-        scaleInput
-            ? Number(
-                scaleInput.value
-            )
-            : 1.5;
-
-
     const pages =
-        parsePageRange(
+        parsePages(
             range,
             pdf.numPages
         );
 
-
     if (!pages.length) {
-
-        throw new Error(
-            "Invalid page range"
-        );
+        throw new Error("Invalid page range.");
     }
 
+    const format =
+        $("imageFormat")
+            ? $("imageFormat").value
+            : "png";
+
+    const scale =
+        $("imageQuality")
+            ? Number($("imageQuality").value)
+            : 1.5;
 
     const JSZip =
         await loadJSZip();
 
-
     const zip =
-        new JSZip();
+        JSZip
+            ? new JSZip()
+            : null;
 
+    const created = [];
 
-    for (
-        let i = 0;
-        i < pages.length;
-        i++
-    ) {
-
-        const pageNumber =
-            pages[i];
-
+    for (const pageNumber of pages) {
 
         const page =
-            await pdf.getPage(
-                pageNumber
-            );
-
+            await pdf.getPage(pageNumber);
 
         const viewport =
             page.getViewport({
-                scale: scale
+                scale
             });
 
-
         const canvas =
-            document.createElement(
-                "canvas"
-            );
-
+            document.createElement("canvas");
 
         canvas.width =
-            Math.ceil(
-                viewport.width
-            );
+            Math.ceil(viewport.width);
 
         canvas.height =
-            Math.ceil(
-                viewport.height
-            );
-
+            Math.ceil(viewport.height);
 
         const context =
-            canvas.getContext(
-                "2d",
-                {
-                    alpha: false
-                }
-            );
-
-
-        if (!context) {
-            throw new Error(
-                "Canvas is not supported"
-            );
-        }
-
+            canvas.getContext("2d");
 
         await page.render({
-            canvasContext:
-                context,
-            viewport:
-                viewport
+            canvasContext: context,
+            viewport
         }).promise;
-
 
         const mime =
             format === "jpeg"
                 ? "image/jpeg"
                 : "image/png";
 
-
-        const quality =
-            format === "jpeg"
-                ? 0.92
-                : undefined;
-
-
         const blob =
             await canvasToBlob(
                 canvas,
                 mime,
-                quality
+                format === "jpeg" ? 0.92 : undefined
             );
-
 
         const extension =
             format === "jpeg"
                 ? "jpg"
                 : "png";
 
-
         const filename =
-            `${removeExtension(
-                file.name
-            )}_page_${pageNumber}.${extension}`;
+            `${removeExtension(file.name)}_page_${pageNumber}.${extension}`;
 
+        created.push({
+            blob,
+            filename
+        });
 
-        zip.file(
-            filename,
-            blob
+        if (zip) {
+            zip.file(filename, blob);
+        }
+    }
+
+    if (zip) {
+
+        const zipBlob =
+            await zip.generateAsync({
+                type: "blob",
+                compression: "DEFLATE"
+            });
+
+        const zipName =
+            `${removeExtension(file.name)}_images.zip`;
+
+        downloadBlob(
+            zipBlob,
+            zipName
+        );
+
+        addRecentFile(
+            zipName,
+            "PDF → Images",
+            zipBlob.size
+        );
+
+    } else {
+
+        for (const item of created) {
+
+            downloadBlob(
+                item.blob,
+                item.filename
+            );
+
+            await wait(200);
+        }
+
+        addRecentFile(
+            created[0].filename,
+            "PDF → Image",
+            created[0].blob.size
         );
     }
 
-
-    const zipBlob =
-        await zip.generateAsync({
-            type: "blob",
-            compression: "DEFLATE",
-            compressionOptions: {
-                level: 6
-            }
-        });
-
-
-    const zipName =
-        `${removeExtension(
-            file.name
-        )}_images.zip`;
-
-
-    downloadBlob(
-        zipBlob,
-        zipName
+    showToast(
+        `${pages.length} image(s) created successfully!`,
+        "success"
     );
 
-
-    saveRecentFile(
-        zipName,
-        "PDF → Images",
-        zipBlob.size
-    );
+    closeTool();
 }
 
 
 /* =========================================================
    MERGE PDF
-========================================================= */
+   ========================================================= */
 
-async function mergePDF(files) {
-
-    if (files.length < 2) {
-
-        throw new Error(
-            "Select at least 2 PDF files"
-        );
-    }
-
+async function mergePDF() {
 
     if (!window.PDFLib) {
-
-        throw new Error(
-            "PDF library is not loaded"
-        );
+        throw new Error("PDF library is not loaded.");
     }
 
+    if (selectedFiles.length < 2) {
+        throw new Error(
+            "Select at least 2 PDF files."
+        );
+    }
 
     const {
         PDFDocument
     } = window.PDFLib;
 
-
     const merged =
         await PDFDocument.create();
 
-
-    for (const file of files) {
+    for (const file of selectedFiles) {
 
         const bytes =
             await file.arrayBuffer();
 
-
         const source =
-            await PDFDocument.load(
-                bytes
-            );
-
+            await PDFDocument.load(bytes);
 
         const pages =
             await merged.copyPages(
@@ -1686,514 +1104,307 @@ async function mergePDF(files) {
                 source.getPageIndices()
             );
 
-
         pages.forEach(page => {
             merged.addPage(page);
         });
     }
-
 
     const output =
         await merged.save({
             useObjectStreams: true
         });
 
-
     const blob =
         new Blob(
             [output],
-            {
-                type:
-                    "application/pdf"
-            }
+            { type: "application/pdf" }
         );
 
-
     const filename =
-        `LeoPDF_Merged_${getDateName()}.pdf`;
-
+        `LeoPDF_Merged_${dateName()}.pdf`;
 
     downloadBlob(
         blob,
         filename
     );
 
-
-    saveRecentFile(
+    addRecentFile(
         filename,
         "Merge PDF",
         blob.size
     );
+
+    showToast(
+        "PDFs merged successfully!",
+        "success"
+    );
+
+    closeTool();
 }
 
 
 /* =========================================================
    SPLIT PDF
-========================================================= */
+   ========================================================= */
 
-async function splitPDF(file) {
+async function splitPDF() {
 
     if (!window.PDFLib) {
-
-        throw new Error(
-            "PDF library is not loaded"
-        );
+        throw new Error("PDF library is not loaded.");
     }
 
+    const file = selectedFiles[0];
 
     const {
         PDFDocument
     } = window.PDFLib;
 
-
     const bytes =
         await file.arrayBuffer();
 
-
     const source =
-        await PDFDocument.load(
-            bytes
-        );
-
+        await PDFDocument.load(bytes);
 
     const total =
         source.getPageCount();
 
+    const rangeInput =
+        $("pageNumbers");
 
-    const input =
-        $("#pageNumbers");
-
-
-    const value =
-        input
-            ? input.value.trim()
+    const range =
+        rangeInput
+            ? rangeInput.value.trim()
             : "";
 
-
     const pages =
-        parsePageRange(
-            value,
+        parsePages(
+            range,
             total
         );
 
-
     if (!pages.length) {
-
         throw new Error(
-            `Enter valid pages from 1 to ${total}`
+            `Enter pages between 1 and ${total}.`
         );
     }
-
 
     const outputPdf =
         await PDFDocument.create();
 
-
     const copied =
         await outputPdf.copyPages(
             source,
-            pages.map(
-                page => page - 1
-            )
+            pages.map(page => page - 1)
         );
-
 
     copied.forEach(page => {
         outputPdf.addPage(page);
     });
-
 
     const output =
         await outputPdf.save({
             useObjectStreams: true
         });
 
-
     const blob =
         new Blob(
             [output],
-            {
-                type:
-                    "application/pdf"
-            }
+            { type: "application/pdf" }
         );
 
-
     const filename =
-        `${removeExtension(
-            file.name
-        )}_split.pdf`;
-
+        `${removeExtension(file.name)}_split.pdf`;
 
     downloadBlob(
         blob,
         filename
     );
 
-
-    saveRecentFile(
+    addRecentFile(
         filename,
         "Split PDF",
         blob.size
     );
+
+    showToast(
+        `${pages.length} page(s) extracted!`,
+        "success"
+    );
+
+    closeTool();
 }
 
 
 /* =========================================================
    COMPRESS PDF
-========================================================= */
+   ========================================================= */
 
-async function compressPDF(file) {
+async function compressPDF() {
 
     if (!window.PDFLib) {
-
-        throw new Error(
-            "PDF library is not loaded"
-        );
+        throw new Error("PDF library is not loaded.");
     }
 
+    const file = selectedFiles[0];
 
     const {
         PDFDocument
     } = window.PDFLib;
 
-
     const bytes =
         await file.arrayBuffer();
-
 
     const originalSize =
         bytes.byteLength;
 
-
     const pdf =
-        await PDFDocument.load(
-            bytes
-        );
-
-
-    const levelInput =
-        $("#compressLevel");
-
-
-    const level =
-        levelInput
-            ? levelInput.value
-            : "normal";
-
+        await PDFDocument.load(bytes);
 
     const output =
         await pdf.save({
-
-            useObjectStreams:
-                true,
-
-            addDefaultPage:
-                false,
-
-            objectsPerTick:
-                level === "high"
-                    ? 100
-                    : 50
+            useObjectStreams: true,
+            addDefaultPage: false,
+            objectsPerTick: 50
         });
-
 
     const blob =
         new Blob(
             [output],
-            {
-                type:
-                    "application/pdf"
-            }
+            { type: "application/pdf" }
         );
 
+    const newSize =
+        blob.size;
 
     const filename =
-        `${removeExtension(
-            file.name
-        )}_compressed.pdf`;
-
+        `${removeExtension(file.name)}_compressed.pdf`;
 
     downloadBlob(
         blob,
         filename
     );
 
-
-    saveRecentFile(
+    addRecentFile(
         filename,
         "Compress PDF",
-        blob.size
+        newSize
     );
 
-
-    if (
-        blob.size <
-        originalSize
-    ) {
+    if (newSize < originalSize) {
 
         const percent =
             (
-                (
-                    (
-                        originalSize -
-                        blob.size
-                    ) /
-                    originalSize
-                ) *
-                100
+                ((originalSize - newSize) /
+                    originalSize) * 100
             ).toFixed(1);
 
-
         showToast(
-            `Compressed by ${percent}%`,
+            `PDF reduced by ${percent}%`,
             "success"
         );
 
     } else {
 
         showToast(
-            "PDF optimized successfully",
+            "PDF optimized successfully.",
             "success"
         );
     }
-}
 
-
-/* =========================================================
-   PAGE RANGE
-========================================================= */
-
-function parsePageRange(
-    value,
-    maxPages
-) {
-
-    if (
-        !Number.isInteger(maxPages) ||
-        maxPages < 1
-    ) {
-        return [];
-    }
-
-
-    if (
-        !value ||
-        !value.trim()
-    ) {
-
-        return Array.from(
-            {
-                length:
-                    maxPages
-            },
-            (_, index) =>
-                index + 1
-        );
-    }
-
-
-    const result =
-        new Set();
-
-
-    const parts =
-        value
-            .split(",")
-            .map(
-                part =>
-                    part.trim()
-            )
-            .filter(Boolean);
-
-
-    for (const part of parts) {
-
-        if (part.includes("-")) {
-
-            const range =
-                part
-                    .split("-")
-                    .map(
-                        Number
-                    );
-
-
-            if (
-                range.length !== 2 ||
-                !Number.isInteger(
-                    range[0]
-                ) ||
-                !Number.isInteger(
-                    range[1]
-                )
-            ) {
-                continue;
-            }
-
-
-            let start =
-                Math.min(
-                    range[0],
-                    range[1]
-                );
-
-
-            let end =
-                Math.max(
-                    range[0],
-                    range[1]
-                );
-
-
-            start =
-                Math.max(
-                    1,
-                    start
-                );
-
-
-            end =
-                Math.min(
-                    maxPages,
-                    end
-                );
-
-
-            for (
-                let i = start;
-                i <= end;
-                i++
-            ) {
-
-                result.add(i);
-            }
-
-        } else {
-
-            const page =
-                Number(part);
-
-
-            if (
-                Number.isInteger(page) &&
-                page >= 1 &&
-                page <= maxPages
-            ) {
-
-                result.add(page);
-            }
-        }
-    }
-
-
-    return Array.from(result)
-        .sort(
-            (a, b) => a - b
-        );
-}
-
-
-/* =========================================================
-   PDF PAGE COUNT
-========================================================= */
-
-async function showPageCount(file) {
-
-    try {
-
-        if (!window.PDFLib) {
-            return;
-        }
-
-
-        const bytes =
-            await file.arrayBuffer();
-
-
-        const pdf =
-            await window.PDFLib.PDFDocument
-                .load(bytes);
-
-
-        const count =
-            pdf.getPageCount();
-
-
-        const input =
-            $("#pageNumbers");
-
-
-        if (input) {
-
-            input.placeholder =
-                `Example: 1-3 or 1,3,${count}`;
-        }
-
-
-        const splitOptions =
-            $("#splitOptions");
-
-
-        if (splitOptions) {
-
-            const small =
-                splitOptions.querySelector(
-                    "small"
-                );
-
-
-            if (small) {
-
-                small.textContent =
-                    `This PDF has ${count} page(s).`;
-            }
-        }
-
-    } catch (error) {
-
-        console.error(
-            "Page count error:",
-            error
-        );
-    }
+    closeTool();
 }
 
 
 /* =========================================================
    PDF.JS
-========================================================= */
+   Current HTML uses PDF.js 3.11.174
+   ========================================================= */
 
-async function loadPDFJS() {
+async function getPDFJS() {
 
-    if (
-        window.pdfjsLib &&
-        window.pdfjsLib.getDocument
-    ) {
+    if (window.pdfjsLib) {
 
-        if (!pdfJsReady) {
-
-            window.pdfjsLib
-                .GlobalWorkerOptions
-                .workerSrc =
-                "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-
-            pdfJsReady = true;
-        }
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+            "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
         return window.pdfjsLib;
     }
 
-
     throw new Error(
-        "PDF.js library is not loaded"
+        "PDF.js is not loaded. Check your internet connection."
     );
 }
 
 
 /* =========================================================
-   JSZIP
-========================================================= */
+   JS PDF LOADER
+   ========================================================= */
+
+let jsPDFPromise = null;
+
+function loadJsPDF() {
+
+    if (
+        window.jspdf &&
+        window.jspdf.jsPDF
+    ) {
+        return Promise.resolve(
+            window.jspdf.jsPDF
+        );
+    }
+
+    if (jsPDFPromise) {
+        return jsPDFPromise;
+    }
+
+    jsPDFPromise =
+        new Promise((resolve, reject) => {
+
+            const script =
+                document.createElement("script");
+
+            script.src =
+                "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+
+            script.onload = () => {
+
+                if (
+                    window.jspdf &&
+                    window.jspdf.jsPDF
+                ) {
+                    resolve(
+                        window.jspdf.jsPDF
+                    );
+                } else {
+                    reject(
+                        new Error(
+                            "jsPDF failed to load."
+                        )
+                    );
+                }
+            };
+
+            script.onerror = () => {
+
+                reject(
+                    new Error(
+                        "Could not load jsPDF."
+                    )
+                );
+            };
+
+            document.head.appendChild(script);
+        });
+
+    return jsPDFPromise;
+}
+
+
+/* =========================================================
+   JSZIP LOADER
+   ========================================================= */
+
+let zipPromise = null;
 
 function loadJSZip() {
 
@@ -2203,156 +1414,140 @@ function loadJSZip() {
         );
     }
 
-
-    if (jsZipPromise) {
-        return jsZipPromise;
+    if (zipPromise) {
+        return zipPromise;
     }
 
+    zipPromise =
+        new Promise((resolve, reject) => {
 
-    jsZipPromise =
-        new Promise(
-            (resolve, reject) => {
+            const script =
+                document.createElement("script");
 
-                const script =
-                    document.createElement(
-                        "script"
+            script.src =
+                "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+
+            script.onload = () => {
+
+                if (window.JSZip) {
+                    resolve(
+                        window.JSZip
                     );
+                } else {
+                    resolve(null);
+                }
+            };
 
+            script.onerror = () => {
+                resolve(null);
+            };
 
-                script.src =
-                    "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+            document.head.appendChild(script);
+        });
 
-
-                script.onload =
-                    () => {
-
-                        if (
-                            window.JSZip
-                        ) {
-
-                            resolve(
-                                window.JSZip
-                            );
-
-                        } else {
-
-                            reject(
-                                new Error(
-                                    "JSZip failed"
-                                )
-                            );
-                        }
-                    };
-
-
-                script.onerror =
-                    () => {
-
-                        reject(
-                            new Error(
-                                "Could not load ZIP library"
-                            )
-                        );
-                    };
-
-
-                document.head.appendChild(
-                    script
-                );
-            }
-        );
-
-
-    return jsZipPromise;
+    return zipPromise;
 }
 
 
 /* =========================================================
-   JSPDF
-========================================================= */
+   PAGE RANGE PARSER
+   ========================================================= */
 
-function loadJsPDF() {
+function parsePages(value, maxPages) {
 
     if (
-        window.jspdf &&
-        window.jspdf.jsPDF
+        !value ||
+        !value.trim()
     ) {
 
-        return Promise.resolve(
-            window.jspdf.jsPDF
+        return Array.from(
+            { length: maxPages },
+            (_, i) => i + 1
         );
     }
 
+    const pages = new Set();
 
-    if (jsPdfPromise) {
-        return jsPdfPromise;
-    }
+    const parts =
+        value
+            .split(",")
+            .map(x => x.trim())
+            .filter(Boolean);
 
+    for (const part of parts) {
 
-    jsPdfPromise =
-        new Promise(
-            (resolve, reject) => {
+        if (part.includes("-")) {
 
-                const script =
-                    document.createElement(
-                        "script"
-                    );
+            const numbers =
+                part
+                    .split("-")
+                    .map(Number);
 
-
-                script.src =
-                    "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-
-
-                script.onload =
-                    () => {
-
-                        if (
-                            window.jspdf &&
-                            window.jspdf.jsPDF
-                        ) {
-
-                            resolve(
-                                window.jspdf.jsPDF
-                            );
-
-                        } else {
-
-                            reject(
-                                new Error(
-                                    "jsPDF failed to load"
-                                )
-                            );
-                        }
-                    };
-
-
-                script.onerror =
-                    () => {
-
-                        reject(
-                            new Error(
-                                "Could not load jsPDF"
-                            )
-                        );
-                    };
-
-
-                document.head.appendChild(
-                    script
-                );
+            if (
+                numbers.length !== 2 ||
+                !Number.isInteger(numbers[0]) ||
+                !Number.isInteger(numbers[1])
+            ) {
+                continue;
             }
-        );
 
+            let start =
+                Math.min(
+                    numbers[0],
+                    numbers[1]
+                );
 
-    return jsPdfPromise;
+            let end =
+                Math.max(
+                    numbers[0],
+                    numbers[1]
+                );
+
+            start =
+                Math.max(
+                    1,
+                    start
+                );
+
+            end =
+                Math.min(
+                    maxPages,
+                    end
+                );
+
+            for (
+                let i = start;
+                i <= end;
+                i++
+            ) {
+                pages.add(i);
+            }
+
+        } else {
+
+            const page =
+                Number(part);
+
+            if (
+                Number.isInteger(page) &&
+                page >= 1 &&
+                page <= maxPages
+            ) {
+                pages.add(page);
+            }
+        }
+    }
+
+    return Array.from(pages)
+        .sort((a, b) => a - b);
 }
 
 
 /* =========================================================
-   FILE → DATA URL
-========================================================= */
+   FILE HELPERS
+   ========================================================= */
 
-function readAsDataURL(file) {
+function fileToDataURL(file) {
 
     return new Promise(
         (resolve, reject) => {
@@ -2360,38 +1555,23 @@ function readAsDataURL(file) {
             const reader =
                 new FileReader();
 
-
             reader.onload =
-                () => {
-
-                    resolve(
-                        reader.result
-                    );
-                };
-
+                () => resolve(
+                    reader.result
+                );
 
             reader.onerror =
-                () => {
+                () => reject(
+                    new Error(
+                        "Could not read file."
+                    )
+                );
 
-                    reject(
-                        new Error(
-                            "Could not read file"
-                        )
-                    );
-                };
-
-
-            reader.readAsDataURL(
-                file
-            );
+            reader.readAsDataURL(file);
         }
     );
 }
 
-
-/* =========================================================
-   LOAD IMAGE
-========================================================= */
 
 function loadImage(dataURL) {
 
@@ -2401,35 +1581,21 @@ function loadImage(dataURL) {
             const image =
                 new Image();
 
-
             image.onload =
-                () => {
-
-                    resolve(image);
-                };
-
+                () => resolve(image);
 
             image.onerror =
-                () => {
+                () => reject(
+                    new Error(
+                        "Invalid image."
+                    )
+                );
 
-                    reject(
-                        new Error(
-                            "Invalid image"
-                        )
-                    );
-                };
-
-
-            image.src =
-                dataURL;
+            image.src = dataURL;
         }
     );
 }
 
-
-/* =========================================================
-   CANVAS BLOB
-========================================================= */
 
 function canvasToBlob(
     canvas,
@@ -2444,18 +1610,14 @@ function canvasToBlob(
                 blob => {
 
                     if (blob) {
-
                         resolve(blob);
-
                     } else {
-
                         reject(
                             new Error(
-                                "Image conversion failed"
+                                "Image conversion failed."
                             )
                         );
                     }
-
                 },
                 type,
                 quality
@@ -2466,419 +1628,310 @@ function canvasToBlob(
 
 
 /* =========================================================
-   BUTTON LOADING
-========================================================= */
+   DOWNLOAD
+   ========================================================= */
 
-function setButtonLoading(
-    button,
-    loading,
-    text
-) {
+function downloadBlob(blob, filename) {
 
-    if (!button) {
-        return;
-    }
+    const url =
+        URL.createObjectURL(blob);
 
+    const link =
+        document.createElement("a");
 
-    if (loading) {
+    link.href = url;
+    link.download = filename;
 
-        button.dataset.originalText =
-            button.textContent;
+    document.body.appendChild(link);
 
+    link.click();
 
-        button.disabled =
-            true;
+    link.remove();
 
-
-        button.innerHTML = `
-            <span
-                style="
-                    display:inline-block;
-                    width:16px;
-                    height:16px;
-                    border:2px solid rgba(255,255,255,.35);
-                    border-top-color:#ffffff;
-                    border-radius:50%;
-                    animation:leoPdfSpin .7s linear infinite;
-                    vertical-align:middle;
-                    margin-right:7px;
-                "
-            ></span>
-            ${escapeHTML(
-                text || "Processing..."
-            )}
-        `;
-
-    } else {
-
-        button.disabled =
-            false;
-
-
-        button.textContent =
-            button.dataset.originalText ||
-            "Done";
-
-
-        delete button.dataset
-            .originalText;
-    }
+    setTimeout(() => {
+        URL.revokeObjectURL(url);
+    }, 1500);
 }
 
 
 /* =========================================================
-   SPINNER CSS
-========================================================= */
+   RECENT FILES
+   ========================================================= */
 
-function addSpinnerCSS() {
-
-    if (
-        $("#leoPdfSpinnerCSS")
-    ) {
-        return;
-    }
-
-
-    const style =
-        document.createElement(
-            "style"
-        );
-
-
-    style.id =
-        "leoPdfSpinnerCSS";
-
-
-    style.textContent = `
-        @keyframes leoPdfSpin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-    `;
-
-
-    document.head.appendChild(
-        style
-    );
-}
-
-
-/* =========================================================
-   MAIN TOOL ACTION
-========================================================= */
-
-async function executeTool() {
-
-    const button =
-        $("#modalActionButton");
-
-
-    if (!currentTool) {
-        return;
-    }
-
-
-    if (!selectedFiles.length) {
-
-        showToast(
-            "Please select a file",
-            "error"
-        );
-
-        return;
-    }
-
-
-    if (
-        currentTool === "mergePdf" &&
-        selectedFiles.length < 2
-    ) {
-
-        showToast(
-            "Select at least 2 PDF files",
-            "error"
-        );
-
-        return;
-    }
-
-
-    setButtonLoading(
-        button,
-        true,
-        "Processing..."
-    );
-
+function getRecentFiles() {
 
     try {
 
-        switch (currentTool) {
-
-            case "imageToPdf":
-
-                await imageToPDF();
-
-                showToast(
-                    "PDF created successfully!",
-                    "success"
-                );
-
-                break;
-
-
-            case "pdfToImage":
-
-                await pdfToImage(
-                    selectedFiles[0]
-                );
-
-                showToast(
-                    "Images created successfully!",
-                    "success"
-                );
-
-                break;
-
-
-            case "mergePdf":
-
-                await mergePDF(
-                    selectedFiles
-                );
-
-                showToast(
-                    "PDFs merged successfully!",
-                    "success"
-                );
-
-                break;
-
-
-            case "splitPdf":
-
-                await splitPDF(
-                    selectedFiles[0]
-                );
-
-                showToast(
-                    "PDF split successfully!",
-                    "success"
-                );
-
-                break;
-
-
-            case "compressPdf":
-
-                await compressPDF(
-                    selectedFiles[0]
-                );
-
-                break;
-
-
-            default:
-
-                throw new Error(
-                    "Unknown tool"
-                );
-        }
-
-
-        closeToolModal();
-
-
-    } catch (error) {
-
-        console.error(
-            "LeoPDF operation error:",
-            error
+        return JSON.parse(
+            localStorage.getItem(
+                STORAGE.recent
+            ) || "[]"
         );
 
+    } catch {
 
-        showToast(
-            error.message ||
-            "Operation failed",
-            "error"
-        );
-
-    } finally {
-
-        setButtonLoading(
-            button,
-            false
-        );
+        return [];
     }
 }
 
 
-/* =========================================================
-   MODAL EVENTS
-========================================================= */
+function addRecentFile(
+    name,
+    type,
+    size
+) {
 
-function setupModal() {
+    const files =
+        getRecentFiles();
 
-    const modal =
-        $("#toolModal");
+    files.unshift({
+        name,
+        type,
+        size,
+        date: new Date().toISOString()
+    });
 
-    const overlay =
-        $("#modalOverlay");
+    const unique = [];
 
-    const closeButton =
-        $("#modalClose");
+    files.forEach(file => {
 
-    const actionButton =
-        $("#modalActionButton");
+        const exists =
+            unique.some(
+                item =>
+                    item.name === file.name &&
+                    item.type === file.type
+            );
 
-
-    if (closeButton) {
-
-        closeButton.addEventListener(
-            "click",
-            event => {
-
-                event.preventDefault();
-
-                closeToolModal();
-            }
-        );
-    }
-
-
-    if (overlay) {
-
-        overlay.addEventListener(
-            "click",
-            event => {
-
-                event.preventDefault();
-
-                closeToolModal();
-            }
-        );
-    }
-
-
-    if (modal) {
-
-        modal.addEventListener(
-            "click",
-            event => {
-
-                if (
-                    event.target === modal
-                ) {
-
-                    closeToolModal();
-                }
-            }
-        );
-    }
-
-
-    if (actionButton) {
-
-        actionButton.addEventListener(
-            "click",
-            executeTool
-        );
-    }
-
-
-    document.addEventListener(
-        "keydown",
-        event => {
-
-            if (
-                event.key === "Escape"
-            ) {
-
-                closeToolModal();
-            }
+        if (!exists) {
+            unique.push(file);
         }
+    });
+
+    localStorage.setItem(
+        STORAGE.recent,
+        JSON.stringify(
+            unique.slice(0, 20)
+        )
     );
+
+    renderRecentFiles();
+    renderFilesPage();
+}
+
+
+function renderRecentFiles() {
+
+    const container =
+        $("recentFiles");
+
+    if (!container) {
+        return;
+    }
+
+    const files =
+        getRecentFiles();
+
+    if (!files.length) {
+
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">📄</div>
+                <h3>No Recent Files</h3>
+                <p>Your converted files will appear here.</p>
+            </div>
+        `;
+
+        return;
+    }
+
+    container.innerHTML =
+        files.slice(0, 5).map(
+            file => {
+
+                const date =
+                    new Date(file.date);
+
+                return `
+                    <div class="recent-file-item">
+
+                        <div class="file-icon">
+                            📄
+                        </div>
+
+                        <div class="file-info">
+                            <strong>
+                                ${escapeHTML(file.name)}
+                            </strong>
+
+                            <span>
+                                ${escapeHTML(file.type || "PDF")}
+                                ${file.size
+                                    ? " • " + formatSize(file.size)
+                                    : ""}
+                            </span>
+                        </div>
+
+                        <div class="file-date">
+                            ${date.toLocaleDateString()}
+                        </div>
+
+                    </div>
+                `;
+            }
+        ).join("");
 }
 
 
 /* =========================================================
-   HOME BUTTONS
-========================================================= */
+   FILES PAGE
+   ========================================================= */
 
-function setupHomeButtons() {
+function renderFilesPage() {
 
-    const heroButton =
-        $("#heroCreateButton");
+    const container =
+        $("filesList");
 
-    if (heroButton) {
-
-        heroButton.addEventListener(
-            "click",
-            () => {
-
-                openTool(
-                    "imageToPdf"
-                );
-            }
-        );
+    if (!container) {
+        return;
     }
 
+    const files =
+        getRecentFiles();
 
-    const filesButton =
-        $("#openFilesButton");
+    if (!files.length) {
 
-    if (filesButton) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">📁</div>
+                <h3>No Files Yet</h3>
+                <p>Your converted files will appear here.</p>
+            </div>
+        `;
 
-        filesButton.addEventListener(
-            "click",
-            () => {
-
-                showPage(
-                    "filesPage"
-                );
-            }
-        );
+        return;
     }
+
+    container.innerHTML =
+        files.map(file => {
+
+            const date =
+                new Date(file.date);
+
+            return `
+                <div class="recent-file-item">
+
+                    <div class="file-icon">
+                        📄
+                    </div>
+
+                    <div class="file-info">
+
+                        <strong>
+                            ${escapeHTML(file.name)}
+                        </strong>
+
+                        <span>
+                            ${escapeHTML(file.type || "PDF")}
+                            ${file.size
+                                ? " • " + formatSize(file.size)
+                                : ""}
+                        </span>
+
+                    </div>
+
+                    <div class="file-date">
+                        ${date.toLocaleDateString()}
+                    </div>
+
+                </div>
+            `;
+
+        }).join("");
+}
+
+
+/* =========================================================
+   CLEAR HISTORY
+   ========================================================= */
+
+function clearHistoryData() {
+
+    localStorage.removeItem(
+        STORAGE.recent
+    );
+
+    renderRecentFiles();
+    renderFilesPage();
+
+    showToast(
+        "History cleared successfully.",
+        "success"
+    );
 }
 
 
 /* =========================================================
    SETTINGS
-========================================================= */
+   ========================================================= */
 
 function setupSettings() {
 
-    const themeToggle =
-        $("#darkModeToggle");
+    const toggle =
+        $("darkModeToggle");
 
-    const notificationToggle =
-        $("#notificationToggle");
+    if (!toggle) {
+        return;
+    }
 
-    const clearButton =
-        $("#clearHistoryButton");
+    toggle.addEventListener(
+        "change",
+        () => {
+
+            if (toggle.checked) {
+
+                document.body.classList.remove(
+                    "light-mode"
+                );
+
+                localStorage.setItem(
+                    STORAGE.theme,
+                    "dark"
+                );
+
+            } else {
+
+                document.body.classList.add(
+                    "light-mode"
+                );
+
+                localStorage.setItem(
+                    STORAGE.theme,
+                    "light"
+                );
+            }
+        }
+    );
+}
 
 
-    /* -------------------------
-       THEME
-    ------------------------- */
+function loadTheme() {
 
-    const savedTheme =
+    const toggle =
+        $("darkModeToggle");
+
+    const theme =
         localStorage.getItem(
             STORAGE.theme
         );
 
-
-    if (
-        savedTheme === "light"
-    ) {
+    if (theme === "light") {
 
         document.body.classList.add(
             "light-mode"
         );
 
-        if (themeToggle) {
-            themeToggle.checked =
-                false;
+        if (toggle) {
+            toggle.checked = false;
         }
 
     } else {
@@ -2887,221 +1940,232 @@ function setupSettings() {
             "light-mode"
         );
 
-        if (themeToggle) {
-            themeToggle.checked =
-                true;
+        if (toggle) {
+            toggle.checked = true;
         }
     }
+}
 
 
-    if (themeToggle) {
+/* =========================================================
+   NOTIFICATIONS
+   ========================================================= */
 
-        themeToggle.addEventListener(
-            "change",
-            () => {
+function setupNotifications() {
 
-                const dark =
-                    themeToggle.checked;
+    const toggle =
+        $("notificationToggle");
 
+    const button =
+        $("notificationButton");
 
-                document.body.classList.toggle(
-                    "light-mode",
-                    !dark
-                );
-
-
-                localStorage.setItem(
-                    STORAGE.theme,
-                    dark
-                        ? "dark"
-                        : "light"
-                );
-            }
-        );
-    }
-
-
-    /* -------------------------
-       NOTIFICATIONS
-    ------------------------- */
-
-    const savedNotifications =
+    const saved =
         localStorage.getItem(
             STORAGE.notifications
         );
 
+    if (toggle) {
 
-    if (notificationToggle) {
+        toggle.checked =
+            saved !== "off";
 
-        notificationToggle.checked =
-            savedNotifications !== "false";
-
-
-        notificationToggle.addEventListener(
+        toggle.addEventListener(
             "change",
             () => {
 
                 localStorage.setItem(
                     STORAGE.notifications,
-                    String(
-                        notificationToggle.checked
-                    )
+                    toggle.checked
+                        ? "on"
+                        : "off"
                 );
 
-
                 showToast(
-                    notificationToggle.checked
-                        ? "Notifications enabled"
-                        : "Notifications disabled",
+                    toggle.checked
+                        ? "Notifications enabled."
+                        : "Notifications disabled.",
                     "success"
                 );
             }
         );
     }
 
+    if (button) {
 
-    /* -------------------------
-       CLEAR HISTORY
-    ------------------------- */
-
-    if (clearButton) {
-
-        clearButton.addEventListener(
+        button.addEventListener(
             "click",
-            clearHistory
+            () => {
+
+                showToast(
+                    "You're all caught up! 🔔"
+                );
+            }
         );
     }
 }
 
 
 /* =========================================================
-   NOTIFICATION BUTTON
-========================================================= */
+   TOAST
+   ========================================================= */
 
-function setupNotification() {
+function showToast(
+    message,
+    type = "normal"
+) {
 
-    const button =
-        $("#notificationButton");
+    const toast =
+        $("toast");
 
-    if (!button) {
+    if (!toast) {
+        console.log(message);
         return;
     }
 
+    const messageElement =
+        $("toastMessage");
 
-    button.addEventListener(
-        "click",
-        () => {
+    const iconElement =
+        $("toastIcon");
 
-            showToast(
-                "You're all caught up!",
-                "success"
-            );
-        }
+    if (messageElement) {
+        messageElement.textContent =
+            message;
+    } else {
+        toast.textContent =
+            message;
+    }
+
+    if (iconElement) {
+
+        iconElement.textContent =
+            type === "error"
+                ? "⚠️"
+                : type === "success"
+                    ? "✓"
+                    : "ℹ️";
+    }
+
+    toast.classList.remove(
+        "success",
+        "error"
     );
+
+    if (type === "success") {
+        toast.classList.add("success");
+    }
+
+    if (type === "error") {
+        toast.classList.add("error");
+    }
+
+    toast.classList.add("show");
+
+    clearTimeout(
+        showToast.timer
+    );
+
+    showToast.timer =
+        setTimeout(() => {
+
+            toast.classList.remove(
+                "show"
+            );
+
+        }, 3000);
 }
 
 
 /* =========================================================
-   DRAG & DROP
-========================================================= */
+   UTILITIES
+   ========================================================= */
 
-function setupDragDrop() {
+function formatSize(bytes) {
 
-    const modal =
-        $("#toolModal");
-
-    if (!modal) {
-        return;
+    if (
+        !Number.isFinite(bytes) ||
+        bytes <= 0
+    ) {
+        return "0 B";
     }
 
+    const units = [
+        "B",
+        "KB",
+        "MB",
+        "GB"
+    ];
 
-    modal.addEventListener(
-        "dragover",
-        event => {
+    const index =
+        Math.min(
+            Math.floor(
+                Math.log(bytes) /
+                Math.log(1024)
+            ),
+            units.length - 1
+        );
 
-            event.preventDefault();
-        }
+    return (
+        bytes /
+        Math.pow(1024, index)
+    ).toFixed(
+        index === 0 ? 0 : 2
+    ) + " " + units[index];
+}
+
+
+function removeExtension(filename) {
+
+    return filename.replace(
+        /\.[^/.]+$/,
+        ""
     );
+}
 
 
-    modal.addEventListener(
-        "drop",
-        async event => {
+function dateName() {
 
-            event.preventDefault();
+    const date =
+        new Date();
 
+    const pad =
+        number =>
+            String(number)
+                .padStart(2, "0");
 
-            const files =
-                Array.from(
-                    event.dataTransfer.files || []
-                );
-
-
-            if (!files.length) {
-                return;
-            }
-
-
-            if (
-                currentTool ===
-                "imageToPdf"
-            ) {
-
-                selectedFiles =
-                    files.filter(
-                        file =>
-                            file.type.startsWith(
-                                "image/"
-                            )
-                    );
-
-            } else {
-
-                selectedFiles =
-                    files.filter(
-                        file =>
-                            file.type ===
-                                "application/pdf" ||
-                            file.name
-                                .toLowerCase()
-                                .endsWith(".pdf")
-                    );
+    return (
+        date.getFullYear() +
+        "-" +
+        pad(date.getMonth() + 1) +
+        "-" +
+        pad(date.getDate())
+    );
+}
 
 
-                if (
-                    currentTool !==
-                    "mergePdf"
-                ) {
+function escapeHTML(value) {
 
-                    selectedFiles =
-                        selectedFiles.slice(
-                            0,
-                            1
-                        );
-                }
-            }
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
 
-            renderSelectedFiles();
+function wait(ms) {
 
-
-            if (
-                currentTool === "splitPdf" &&
-                selectedFiles.length
-            ) {
-
-                await showPageCount(
-                    selectedFiles[0]
-                );
-            }
-        }
+    return new Promise(
+        resolve =>
+            setTimeout(resolve, ms)
     );
 }
 
 
 /* =========================================================
    GLOBAL ERROR HANDLING
-========================================================= */
+   ========================================================= */
 
 window.addEventListener(
     "error",
@@ -3109,8 +2173,7 @@ window.addEventListener(
 
         console.error(
             "LeoPDF error:",
-            event.error ||
-            event.message
+            event.error || event.message
         );
     }
 );
@@ -3123,64 +2186,6 @@ window.addEventListener(
         console.error(
             "LeoPDF promise error:",
             event.reason
-        );
-
-        showToast(
-            "Something went wrong. Please try again.",
-            "error"
-        );
-    }
-);
-
-
-/* =========================================================
-   INITIALIZE
-========================================================= */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        console.log(
-            "LeoPDF starting..."
-        );
-
-
-        addSpinnerCSS();
-
-
-        setupSplash();
-
-
-        setupNavigation();
-
-
-        setupToolCards();
-
-
-        setupFileInput();
-
-
-        setupModal();
-
-
-        setupHomeButtons();
-
-
-        setupSettings();
-
-
-        setupNotification();
-
-
-        setupDragDrop();
-
-
-        renderRecentFiles();
-
-
-        console.log(
-            "LeoPDF ready — Convert. Compress. Simplify."
         );
     }
 );
