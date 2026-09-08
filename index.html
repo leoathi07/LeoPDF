@@ -3,751 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>LeoPDF — Convert. Compress. Simplify.</title>
-
-    <meta
-        name="description"
-        content="LeoPDF - Convert, compress, merge and split PDF files easily."
-    >
-
+    <title>LeoPDF - Convert. Compress. Simplify.</title>
     <link rel="stylesheet" href="style.css">
-
-    <!-- PDF LIB -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-
-    <!-- PDF JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
-    <!-- JSPDF -->
+    
+    <!-- PDF Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 </head>
-
 <body>
 
-<!-- =====================================================
-     SPLASH SCREEN
-===================================================== -->
-
-<div id="splashScreen" class="splash-screen">
-
-    <div class="splash-content">
-
-        <div class="logo-wrapper">
-            <img
-                id="splashLogo"
-                class="app-logo"
-                src="file_00000000db748208ae0361855c0a94b9.png"
-                alt="LeoPDF Logo"
-            >
-
-            <div id="logoFallback" class="logo-fallback">
-                <span>LP</span>
+    <!-- Splash Screen -->
+    <div id="splash-screen">
+        <div class="splash-content">
+            <div class="logo-wrapper">
+                <img src="File_00000000db748208ae0361855c0a94b9.png" alt="LeoPDF Logo" id="splash-logo">
             </div>
+            <h1 class="glow-text">LeoPDF</h1>
+            <p class="tagline">Convert. Compress. Simplify.</p>
+            <div class="loader"></div>
         </div>
-
-        <h1>LeoPDF</h1>
-
-        <p>Convert. Compress. Simplify.</p>
-
-        <div class="loading-bar">
-            <div class="loading-progress"></div>
-        </div>
-
-        <span class="loading-text">Loading...</span>
-
     </div>
 
-</div>
-
-
-<!-- =====================================================
-     MAIN APP
-===================================================== -->
-
-<div id="app" class="app">
-
-    <!-- =================================================
-         HEADER
-    ================================================== -->
-
-    <header class="app-header">
-
-        <div class="brand">
-
-            <div class="header-logo">
-                <img
-                    src="file_00000000db748208ae0361855c0a94b9.png"
-                    alt="LeoPDF"
-                >
-            </div>
-
-            <div>
-                <h2>LeoPDF</h2>
-                <span>PDF Utility</span>
-            </div>
-
-        </div>
-
-        <button
-            id="notificationButton"
-            class="icon-button"
-            type="button"
-            aria-label="Notifications"
-        >
-            🔔
-        </button>
-
-    </header>
-
-
-    <!-- =================================================
-         MAIN CONTENT
-    ================================================== -->
-
-    <main class="main-content">
-
-        <!-- =============================================
-             HOME PAGE
-        ============================================== -->
-
-        <section
-            id="homePage"
-            class="page active-page"
-        >
-
-            <div class="hero-card">
-
-                <div class="hero-content">
-
-                    <span class="hero-badge">
-                        ✨ SMART PDF TOOL
-                    </span>
-
-                    <h1>
-                        Your PDF.
-                        <span>Made Simple.</span>
-                    </h1>
-
-                    <p>
-                        Convert, merge, split and compress
-                        your documents with LeoPDF.
-                    </p>
-
-                    <button
-                        id="heroCreateButton"
-                        class="primary-button"
-                        type="button"
-                    >
-                        <span>🖼️</span>
-                        Create PDF
-                    </button>
-
-                </div>
-
-                <div class="hero-icon">
-                    📄
-                </div>
-
-            </div>
-
-
-            <!-- QUICK TOOLS -->
-
-            <div class="section-header">
-
+    <!-- Main App -->
+    <div id="main-app" class="hidden">
+        <!-- Header / Navbar -->
+        <header class="navbar">
+            <div class="brand">
+                <img src="File_00000000db748208ae0361855c0a94b9.png" alt="LeoPDF" class="nav-logo">
                 <div>
-                    <span class="section-label">
-                        QUICK ACTIONS
-                    </span>
-
-                    <h2>Popular Tools</h2>
+                    <span class="brand-name glow-text">LeoPDF</span>
+                    <!-- Gamification Feature: Streak counter -->
+                    <div id="streakBadge" class="streak-badge">🔥 <span id="streakCount">1</span> Day Streak</div>
                 </div>
-
-                <button
-                    id="openToolsButton"
-                    class="text-button"
-                    type="button"
-                >
-                    View All
-                </button>
-
             </div>
-
-
-            <div class="tools-grid">
-
-                <button
-                    class="tool-card image-tool"
-                    data-tool="imageToPdf"
-                    type="button"
-                >
-                    <div class="tool-icon">🖼️</div>
-
-                    <div class="tool-content">
-                        <h3>Image → PDF</h3>
-                        <p>Create PDF from images</p>
-                    </div>
-
-                    <span class="tool-arrow">›</span>
-                </button>
-
-
-                <button
-                    class="tool-card pdf-tool"
-                    data-tool="pdfToImage"
-                    type="button"
-                >
-                    <div class="tool-icon">📄</div>
-
-                    <div class="tool-content">
-                        <h3>PDF → Image</h3>
-                        <p>Convert PDF pages</p>
-                    </div>
-
-                    <span class="tool-arrow">›</span>
-                </button>
-
-
-                <button
-                    class="tool-card merge-tool"
-                    data-tool="mergePdf"
-                    type="button"
-                >
-                    <div class="tool-icon">🔗</div>
-
-                    <div class="tool-content">
-                        <h3>Merge PDF</h3>
-                        <p>Combine PDF files</p>
-                    </div>
-
-                    <span class="tool-arrow">›</span>
-                </button>
-
-
-                <button
-                    class="tool-card compress-tool"
-                    data-tool="compressPdf"
-                    type="button"
-                >
-                    <div class="tool-icon">📦</div>
-
-                    <div class="tool-content">
-                        <h3>Compress PDF</h3>
-                        <p>Optimize PDF size</p>
-                    </div>
-
-                    <span class="tool-arrow">›</span>
-                </button>
-
-            </div>
-
-
-            <!-- RECENT -->
-
-            <div class="section-header">
-
-                <div>
-                    <span class="section-label">
-                        YOUR ACTIVITY
-                    </span>
-
-                    <h2>Recent Files</h2>
-                </div>
-
-                <button
-                    id="openFilesButton"
-                    class="text-button"
-                    type="button"
-                >
-                    View All
-                </button>
-
-            </div>
-
-            <div id="recentFiles" class="recent-files"></div>
-
-        </section>
-
-
-        <!-- =============================================
-             FILES PAGE
-        ============================================== -->
-
-        <section
-            id="filesPage"
-            class="page"
-        >
-
-            <div class="page-title">
-
-                <span class="section-label">
-                    DOCUMENTS
-                </span>
-
-                <h1>Your Files</h1>
-
-                <p>
-                    Recently created PDF files
-                </p>
-
-            </div>
-
-            <div
-                id="filesList"
-                class="files-list"
-            ></div>
-
-        </section>
-
-
-        <!-- =============================================
-             TOOLS PAGE
-        ============================================== -->
-
-        <section
-            id="toolsPage"
-            class="page"
-        >
-
-            <div class="page-title">
-
-                <span class="section-label">
-                    ALL TOOLS
-                </span>
-
-                <h1>PDF Tools</h1>
-
-                <p>
-                    Everything you need for your documents.
-                </p>
-
-            </div>
-
-
-            <div class="large-tools-grid">
-
-                <button
-                    class="large-tool-card"
-                    data-tool="imageToPdf"
-                    type="button"
-                >
-                    <div class="large-tool-icon">🖼️</div>
-
-                    <h3>Image → PDF</h3>
-
-                    <p>
-                        Convert multiple images
-                        into one PDF document.
-                    </p>
-
-                    <span>Open Tool →</span>
-                </button>
-
-
-                <button
-                    class="large-tool-card"
-                    data-tool="pdfToImage"
-                    type="button"
-                >
-                    <div class="large-tool-icon">📄</div>
-
-                    <h3>PDF → Image</h3>
-
-                    <p>
-                        Convert PDF pages
-                        into high-quality images.
-                    </p>
-
-                    <span>Open Tool →</span>
-                </button>
-
-
-                <button
-                    class="large-tool-card"
-                    data-tool="mergePdf"
-                    type="button"
-                >
-                    <div class="large-tool-icon">🔗</div>
-
-                    <h3>Merge PDF</h3>
-
-                    <p>
-                        Combine multiple PDF files
-                        into a single document.
-                    </p>
-
-                    <span>Open Tool →</span>
-                </button>
-
-
-                <button
-                    class="large-tool-card"
-                    data-tool="splitPdf"
-                    type="button"
-                >
-                    <div class="large-tool-icon">✂️</div>
-
-                    <h3>Split PDF</h3>
-
-                    <p>
-                        Extract selected pages
-                        from your PDF.
-                    </p>
-
-                    <span>Open Tool →</span>
-                </button>
-
-
-                <button
-                    class="large-tool-card"
-                    data-tool="compressPdf"
-                    type="button"
-                >
-                    <div class="large-tool-icon">📦</div>
-
-                    <h3>Compress PDF</h3>
-
-                    <p>
-                        Optimize and re-save
-                        your PDF.
-                    </p>
-
-                    <span>Open Tool →</span>
-                </button>
-
-            </div>
-
-        </section>
-
-
-        <!-- =============================================
-             SETTINGS
-        ============================================== -->
-
-        <section
-            id="settingsPage"
-            class="page"
-        >
-
-            <div class="page-title">
-
-                <span class="section-label">
-                    PREFERENCES
-                </span>
-
-                <h1>Settings</h1>
-
-                <p>
-                    Customize your LeoPDF experience.
-                </p>
-
-            </div>
-
-
-            <div class="settings-card">
-
-                <div class="setting-row">
-
-                    <div class="setting-icon">
-                        🌙
-                    </div>
-
-                    <div class="setting-info">
-
-                        <h3>Dark Mode</h3>
-
-                        <p>
-                            Use dark appearance
-                        </p>
-
-                    </div>
-
-                    <label class="switch">
-
-                        <input
-                            id="darkModeToggle"
-                            type="checkbox"
-                        >
-
-                        <span class="slider"></span>
-
-                    </label>
-
-                </div>
-
-
-                <div class="setting-row">
-
-                    <div class="setting-icon">
-                        🔔
-                    </div>
-
-                    <div class="setting-info">
-
-                        <h3>Notifications</h3>
-
-                        <p>
-                            Enable app notifications
-                        </p>
-
-                    </div>
-
-                    <label class="switch">
-
-                        <input
-                            id="notificationToggle"
-                            type="checkbox"
-                            checked
-                        >
-
-                        <span class="slider"></span>
-
-                    </label>
-
-                </div>
-
-
-                <button
-                    id="clearHistoryButton"
-                    class="danger-button"
-                    type="button"
-                >
-                    🗑️ Clear Recent History
-                </button>
-
-            </div>
-
-
-            <div class="about-card">
-
-                <div class="about-logo">
-
-                    <img
-                        src="file_00000000db748208ae0361855c0a94b9.png"
-                        alt="LeoPDF"
-                    >
-
-                </div>
-
-                <h2>LeoPDF</h2>
-
-                <p>
-                    Convert. Compress. Simplify.
-                </p>
-
-                <span>
-                    Version 1.0.0
-                </span>
-
-            </div>
-
-        </section>
-
-    </main>
-
-
-    <!-- =================================================
-         BOTTOM NAVIGATION
-    ================================================== -->
-
-    <nav class="bottom-nav">
-
-        <button
-            class="bottom-nav-item active"
-            data-page="homePage"
-            type="button"
-        >
-            <span>⌂</span>
-            <small>Home</small>
-        </button>
-
-
-        <button
-            class="bottom-nav-item"
-            data-page="filesPage"
-            type="button"
-        >
-            <span>📁</span>
-            <small>Files</small>
-        </button>
-
-
-        <button
-            class="bottom-nav-item"
-            data-page="toolsPage"
-            type="button"
-        >
-            <span>⚡</span>
-            <small>Tools</small>
-        </button>
-
-
-        <button
-            class="bottom-nav-item"
-            data-page="settingsPage"
-            type="button"
-        >
-            <span>⚙️</span>
-            <small>Settings</small>
-        </button>
-
-    </nav>
-
-</div>
-
-
-<!-- =====================================================
-     TOOL MODAL
-===================================================== -->
-
-<div
-    id="toolModal"
-    class="modal"
-    aria-hidden="true"
->
-
-    <div
-        class="modal-overlay"
-        id="modalOverlay"
-    ></div>
-
-    <div class="modal-box">
-
-        <button
-            id="modalClose"
-            class="modal-close"
-            type="button"
-        >
-            ×
-        </button>
-
-
-        <div
-            id="modalIcon"
-            class="modal-icon"
-        >
-            📄
+            <button class="theme-toggle-btn" onclick="toggleTheme()">🌓 Theme</button>
+        </header>
+
+        <!-- Tool Navigation Tabs -->
+        <div class="tabs-container">
+            <button class="tab-btn active" onclick="switchTab('img2pdf')">🖼️ Image to PDF</button>
+            <button class="tab-btn" onclick="switchTab('mergepdf')">📑 Merge PDFs</button>
+            <button class="tab-btn" onclick="switchTab('camscanner')">📷 Cam Scan</button>
+            <button class="tab-btn" onclick="switchTab('watermark')">💧 Watermark</button>
+            <button class="tab-btn" onclick="switchTab('text2pdf')">📝 Text to PDF</button>
         </div>
 
+        <!-- Main Content Container -->
+        <main class="container">
+            <!-- Feature 1: Image to PDF -->
+            <section id="img2pdf" class="tab-content active">
+                <h2>Image to PDF Converter</h2>
+                <div class="drop-zone" onclick="document.getElementById('imageInput').click()">
+                    <span class="icon">📁</span>
+                    <p>Click or Drag & Drop Images Here</p>
+                    <input type="file" id="imageInput" accept="image/*" multiple hidden onchange="handleImageSelect(event)">
+                </div>
+                <div id="imagePreviewContainer" class="preview-grid"></div>
+                <button class="btn primary-btn" id="convertImgBtn" onclick="convertImagesToPDF()" disabled>✨ Generate PDF</button>
+            </section>
 
-        <h2 id="modalTitle">
-            PDF Tool
-        </h2>
+            <!-- Feature 2: Merge PDFs -->
+            <section id="mergepdf" class="tab-content">
+                <h2>Merge Multiple PDFs</h2>
+                <div class="drop-zone" onclick="document.getElementById('pdfInput').click()">
+                    <span class="icon">📚</span>
+                    <p>Select Multiple PDF Files to Combine</p>
+                    <input type="file" id="pdfInput" accept="application/pdf" multiple hidden onchange="handlePDFSelect(event)">
+                </div>
+                <ul id="pdfFileList" class="file-list"></ul>
+                <button class="btn primary-btn" id="mergeBtn" onclick="mergePDFFiles()" disabled>⚡ Merge PDFs Now</button>
+            </section>
 
+            <!-- Feature 3: Live Camera Scanner -->
+            <section id="camscanner" class="tab-content">
+                <h2>Camera Document Scanner</h2>
+                <div class="camera-wrapper">
+                    <video id="webcam" autoplay playsinline></video>
+                    <canvas id="camCanvas" hidden></canvas>
+                </div>
+                <div class="cam-controls">
+                    <button class="btn primary-btn" onclick="startCamera()">🎥 Start Camera</button>
+                    <button class="btn primary-btn" onclick="captureDocument()">📸 Capture Photo</button>
+                </div>
+                <div id="scannedPreviewGrid" class="preview-grid"></div>
+                <button class="btn primary-btn" id="saveCamPdfBtn" onclick="saveCapturedToPDF()" disabled>💾 Save Scanned PDF</button>
+            </section>
 
-        <p id="modalDescription">
-            Select your file.
-        </p>
+            <!-- Feature 4: Watermark PDF -->
+            <section id="watermark" class="tab-content">
+                <h2>Add Watermark to PDF Text</h2>
+                <input type="text" id="watermarkText" class="custom-input" placeholder="Enter Watermark Text (e.g., CONFIDENTIAL)">
+                <textarea id="watermarkDocContent" class="custom-textarea" placeholder="Type document content here..."></textarea>
+                <button class="btn primary-btn" onclick="generateWatermarkedPDF()">🔒 Generate Watermarked PDF</button>
+            </section>
 
+            <!-- Feature 5: Text to PDF -->
+            <section id="text2pdf" class="tab-content">
+                <h2>Text / Document to PDF</h2>
+                <input type="text" id="pdfDocTitle" class="custom-input" placeholder="Document Title (Optional)">
+                <textarea id="pdfTextContent" class="custom-textarea" placeholder="Type your text content here..."></textarea>
+                <button class="btn primary-btn" onclick="convertTextToPDF()">🚀 Download Text as PDF</button>
+            </section>
 
-        <!-- FILE PICKER -->
+            <!-- Recent History Section -->
+            <div class="history-card">
+                <h3>📜 Recent Files Created</h3>
+                <ul id="historyList" class="file-list">
+                    <li class="empty-msg">No recent files generated yet.</li>
+                </ul>
+            </div>
+        </main>
 
-        <label
-            for="fileInput"
-            class="file-picker"
-        >
-
-            <span class="picker-icon">
-                📂
-            </span>
-
-            <strong>
-                Choose Files
-            </strong>
-
-            <small>
-                Tap here to select files
-            </small>
-
-        </label>
-
-
-        <input
-            id="fileInput"
-            type="file"
-            hidden
-        >
-
-
-        <!-- OPTIONS -->
-
-        <div
-            id="fileOptions"
-            class="file-options"
-        ></div>
-
-
-        <!-- SELECTED FILES -->
-
-        <div
-            id="selectedFiles"
-            class="selected-files"
-        ></div>
-
-
-        <!-- SPLIT OPTIONS -->
-
-        <div
-            id="splitOptions"
-            class="split-options"
-        >
-
-            <label for="pageNumbers">
-                Page Numbers
-            </label>
-
-            <input
-                id="pageNumbers"
-                type="text"
-                placeholder="Example: 1-3,5,7"
-            >
-
-            <small>
-                Leave empty to use all pages.
-            </small>
-
-        </div>
-
-
-        <button
-            id="modalActionButton"
-            class="primary-button modal-action"
-            type="button"
-        >
-            Continue
-        </button>
-
+        <footer>
+            <p>© 2026 LeoPDF | Designed with Neon Dark Theme</p>
+        </footer>
     </div>
 
-</div>
-
-
-<!-- =====================================================
-     TOAST
-===================================================== -->
-
-<div
-    id="toast"
-    class="toast"
->
-
-    <span id="toastIcon">
-        ✓
-    </span>
-
-    <span id="toastMessage">
-        Done
-    </span>
-
-</div>
-
-
-<!-- =====================================================
-     SCRIPT
-===================================================== -->
-
-<script src="script.js"></script>
-
+    <script src="script.js"></script>
 </body>
-                    </html>
+</html>
