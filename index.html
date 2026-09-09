@@ -1,124 +1,341 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LeoPDF - Convert. Compress. Simplify.</title>
-    <link rel="stylesheet" href="style.css">
-    
-    <!-- PDF Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#111827">
+  <title>LeoPDF</title>
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-    <!-- Splash Screen -->
-    <div id="splash-screen">
-        <div class="splash-content">
-            <div class="logo-wrapper">
-                <img src="File_00000000db748208ae0361855c0a94b9.png" alt="LeoPDF Logo" id="splash-logo">
-            </div>
-            <h1 class="glow-text">LeoPDF</h1>
-            <p class="tagline">Convert. Compress. Simplify.</p>
-            <div class="loader"></div>
+  <div id="toast"></div>
+
+  <!-- SPLASH -->
+  <section id="splash" class="screen active">
+    <div class="logo">L</div>
+    <h1>LeoPDF</h1>
+    <p>Smart PDF. Simple.</p>
+  </section>
+
+  <!-- APP -->
+  <main id="app" class="hidden">
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="mini-logo">L</div>
+        <div>
+          <h2>LeoPDF</h2>
+          <span>PDF Toolkit</span>
         </div>
+      </div>
+
+      <button class="icon-btn" id="themeBtn">☾</button>
+    </header>
+
+    <!-- HOME -->
+    <section id="home" class="page active-page">
+
+      <div class="welcome">
+        <div>
+          <small>Welcome to</small>
+          <h1>LeoPDF</h1>
+          <p>Everything you need for PDF files.</p>
+        </div>
+        <div class="welcome-icon">📄</div>
+      </div>
+
+      <div class="section-title">
+        <h3>PDF Tools</h3>
+      </div>
+
+      <div class="tool-grid">
+
+        <button class="tool" data-tool="merge">
+          <span>🔗</span>
+          <b>Merge PDF</b>
+          <small>Combine PDFs</small>
+        </button>
+
+        <button class="tool" data-tool="split">
+          <span>✂️</span>
+          <b>Split PDF</b>
+          <small>Separate pages</small>
+        </button>
+
+        <button class="tool" data-tool="compress">
+          <span>📦</span>
+          <b>Compress</b>
+          <small>Reduce size</small>
+        </button>
+
+        <button class="tool" data-tool="convert">
+          <span>🔄</span>
+          <b>Convert</b>
+          <small>PDF & documents</small>
+        </button>
+
+        <button class="tool" data-tool="imagepdf">
+          <span>🖼️</span>
+          <b>Image → PDF</b>
+          <small>JPG / PNG</small>
+        </button>
+
+        <button class="tool" data-tool="pdfimage">
+          <span>📸</span>
+          <b>PDF → Image</b>
+          <small>JPG / PNG</small>
+        </button>
+
+        <button class="tool" data-tool="rotate">
+          <span>🔃</span>
+          <b>Rotate</b>
+          <small>Rotate pages</small>
+        </button>
+
+        <button class="tool" data-tool="pages">
+          <span>📑</span>
+          <b>Pages</b>
+          <small>Delete / Extract</small>
+        </button>
+
+      </div>
+
+      <div class="section-title">
+        <h3>Edit PDF</h3>
+      </div>
+
+      <div class="horizontal-tools">
+        <button data-tool="edit">✏️ Edit</button>
+        <button data-tool="signature">✍️ Signature</button>
+        <button data-tool="highlight">🖍️ Highlight</button>
+        <button data-tool="watermark">💧 Watermark</button>
+        <button data-tool="pagenumber">🔢 Page Number</button>
+        <button data-tool="insertimage">🖼️ Insert Image</button>
+      </div>
+
+      <div class="section-title">
+        <h3>Scan & OCR</h3>
+      </div>
+
+      <div class="scan-card">
+        <div>
+          <span class="big-icon">📷</span>
+          <h3>Scan Document</h3>
+          <p>Camera → Crop → OCR → PDF</p>
+        </div>
+
+        <button class="primary" data-tool="scan">Scan</button>
+      </div>
+
+      <div class="section-title">
+        <h3>Security</h3>
+      </div>
+
+      <div class="security-grid">
+        <button data-tool="protect">🔐 Protect PDF</button>
+        <button data-tool="lock">🔒 PIN / Fingerprint</button>
+        <button data-tool="encrypt">🛡️ Encrypt</button>
+        <button data-tool="decrypt">🔓 Decrypt</button>
+      </div>
+
+    </section>
+
+    <!-- FILES -->
+    <section id="files" class="page">
+
+      <div class="page-header">
+        <div>
+          <h2>My Files</h2>
+          <p>Recent PDF files</p>
+        </div>
+        <button class="primary" id="uploadBtn">＋ Add</button>
+      </div>
+
+      <input
+        type="file"
+        id="fileInput"
+        accept=".pdf,image/*,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+        multiple
+        hidden
+      >
+
+      <div id="fileList" class="file-list"></div>
+
+    </section>
+
+    <!-- VIEWER -->
+    <section id="viewer" class="page">
+
+      <div class="viewer-header">
+        <button class="back-btn" id="viewerBack">←</button>
+        <div>
+          <h3 id="viewerTitle">PDF Viewer</h3>
+          <small id="viewerInfo">No file selected</small>
+        </div>
+
+        <button class="icon-btn" id="viewerShare">↗</button>
+      </div>
+
+      <div class="viewer-search">
+        <input id="pdfSearch" placeholder="Search inside PDF...">
+        <button id="searchBtn">🔍</button>
+      </div>
+
+      <div class="viewer-area">
+        <div id="previewIcon">📄</div>
+        <h2 id="previewName">Select a PDF</h2>
+        <p id="previewText">
+          PDF preview area
+        </p>
+
+        <div class="viewer-actions">
+          <button id="bookmarkBtn">🔖 Bookmark</button>
+          <button id="favoriteBtn">⭐ Favorite</button>
+        </div>
+      </div>
+
+      <div class="viewer-controls">
+        <button id="prevPage">‹</button>
+        <span id="pageNumber">Page 1</span>
+        <button id="nextPage">›</button>
+      </div>
+
+    </section>
+
+    <!-- MORE -->
+    <section id="more" class="page">
+
+      <div class="page-header">
+        <div>
+          <h2>More</h2>
+          <p>LeoPDF features</p>
+        </div>
+      </div>
+
+      <div class="more-list">
+
+        <button data-tool="esign">
+          <span>✍️</span>
+          <div>
+            <b>eSign Requests</b>
+            <small>Request signatures from others</small>
+          </div>
+          <strong>›</strong>
+        </button>
+
+        <button data-tool="cloud">
+          <span>☁️</span>
+          <div>
+            <b>Cloud Backup</b>
+            <small>Google Drive / Dropbox</small>
+          </div>
+          <strong>›</strong>
+        </button>
+
+        <button data-tool="share">
+          <span>📤</span>
+          <div>
+            <b>Share PDF</b>
+            <small>WhatsApp / Email / Apps</small>
+          </div>
+          <strong>›</strong>
+        </button>
+
+        <button data-tool="bookmark">
+          <span>🔖</span>
+          <div>
+            <b>Bookmarks</b>
+            <small>Saved PDF pages</small>
+          </div>
+          <strong>›</strong>
+        </button>
+
+        <button data-tool="favorites">
+          <span>⭐</span>
+          <div>
+            <b>Favorites</b>
+            <small>Your favorite files</small>
+          </div>
+          <strong>›</strong>
+        </button>
+
+        <button data-tool="offline">
+          <span>📴</span>
+          <div>
+            <b>Offline Mode</b>
+            <small>Use basic tools offline</small>
+          </div>
+          <strong>›</strong>
+        </button>
+
+        <button data-tool="settings">
+          <span>⚙️</span>
+          <div>
+            <b>Settings</b>
+            <small>LeoPDF preferences</small>
+          </div>
+          <strong>›</strong>
+        </button>
+
+      </div>
+
+    </section>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+
+      <button class="nav active" data-page="home">
+        <span>⌂</span>
+        Home
+      </button>
+
+      <button class="nav" data-page="files">
+        <span>📁</span>
+        Files
+      </button>
+
+      <button class="nav" data-page="viewer">
+        <span>📖</span>
+        Reader
+      </button>
+
+      <button class="nav" data-page="more">
+        <span>☰</span>
+        More
+      </button>
+
+    </nav>
+
+  </main>
+
+  <!-- MODAL -->
+  <div id="modal" class="modal hidden">
+
+    <div class="modal-box">
+
+      <button id="closeModal" class="close">×</button>
+
+      <div id="modalIcon" class="modal-icon">📄</div>
+
+      <h2 id="modalTitle">LeoPDF</h2>
+
+      <p id="modalDescription">
+        Select a PDF file to continue.
+      </p>
+
+      <div id="modalContent"></div>
+
+      <button id="modalAction" class="primary full">
+        Select File
+      </button>
+
     </div>
 
-    <!-- Main App -->
-    <div id="main-app" class="hidden">
-        <!-- Header / Navbar -->
-        <header class="navbar">
-            <div class="brand">
-                <img src="File_00000000db748208ae0361855c0a94b9.png" alt="LeoPDF" class="nav-logo">
-                <div>
-                    <span class="brand-name glow-text">LeoPDF</span>
-                    <!-- Gamification Feature: Streak counter -->
-                    <div id="streakBadge" class="streak-badge">🔥 <span id="streakCount">1</span> Day Streak</div>
-                </div>
-            </div>
-            <button class="theme-toggle-btn" onclick="toggleTheme()">🌓 Theme</button>
-        </header>
+  </div>
 
-        <!-- Tool Navigation Tabs -->
-        <div class="tabs-container">
-            <button class="tab-btn active" onclick="switchTab('img2pdf')">🖼️ Image to PDF</button>
-            <button class="tab-btn" onclick="switchTab('mergepdf')">📑 Merge PDFs</button>
-            <button class="tab-btn" onclick="switchTab('camscanner')">📷 Cam Scan</button>
-            <button class="tab-btn" onclick="switchTab('watermark')">💧 Watermark</button>
-            <button class="tab-btn" onclick="switchTab('text2pdf')">📝 Text to PDF</button>
-        </div>
+  <script src="script.js"></script>
 
-        <!-- Main Content Container -->
-        <main class="container">
-            <!-- Feature 1: Image to PDF -->
-            <section id="img2pdf" class="tab-content active">
-                <h2>Image to PDF Converter</h2>
-                <div class="drop-zone" onclick="document.getElementById('imageInput').click()">
-                    <span class="icon">📁</span>
-                    <p>Click or Drag & Drop Images Here</p>
-                    <input type="file" id="imageInput" accept="image/*" multiple hidden onchange="handleImageSelect(event)">
-                </div>
-                <div id="imagePreviewContainer" class="preview-grid"></div>
-                <button class="btn primary-btn" id="convertImgBtn" onclick="convertImagesToPDF()" disabled>✨ Generate PDF</button>
-            </section>
-
-            <!-- Feature 2: Merge PDFs -->
-            <section id="mergepdf" class="tab-content">
-                <h2>Merge Multiple PDFs</h2>
-                <div class="drop-zone" onclick="document.getElementById('pdfInput').click()">
-                    <span class="icon">📚</span>
-                    <p>Select Multiple PDF Files to Combine</p>
-                    <input type="file" id="pdfInput" accept="application/pdf" multiple hidden onchange="handlePDFSelect(event)">
-                </div>
-                <ul id="pdfFileList" class="file-list"></ul>
-                <button class="btn primary-btn" id="mergeBtn" onclick="mergePDFFiles()" disabled>⚡ Merge PDFs Now</button>
-            </section>
-
-            <!-- Feature 3: Live Camera Scanner -->
-            <section id="camscanner" class="tab-content">
-                <h2>Camera Document Scanner</h2>
-                <div class="camera-wrapper">
-                    <video id="webcam" autoplay playsinline></video>
-                    <canvas id="camCanvas" hidden></canvas>
-                </div>
-                <div class="cam-controls">
-                    <button class="btn primary-btn" onclick="startCamera()">🎥 Start Camera</button>
-                    <button class="btn primary-btn" onclick="captureDocument()">📸 Capture Photo</button>
-                </div>
-                <div id="scannedPreviewGrid" class="preview-grid"></div>
-                <button class="btn primary-btn" id="saveCamPdfBtn" onclick="saveCapturedToPDF()" disabled>💾 Save Scanned PDF</button>
-            </section>
-
-            <!-- Feature 4: Watermark PDF -->
-            <section id="watermark" class="tab-content">
-                <h2>Add Watermark to PDF Text</h2>
-                <input type="text" id="watermarkText" class="custom-input" placeholder="Enter Watermark Text (e.g., CONFIDENTIAL)">
-                <textarea id="watermarkDocContent" class="custom-textarea" placeholder="Type document content here..."></textarea>
-                <button class="btn primary-btn" onclick="generateWatermarkedPDF()">🔒 Generate Watermarked PDF</button>
-            </section>
-
-            <!-- Feature 5: Text to PDF -->
-            <section id="text2pdf" class="tab-content">
-                <h2>Text / Document to PDF</h2>
-                <input type="text" id="pdfDocTitle" class="custom-input" placeholder="Document Title (Optional)">
-                <textarea id="pdfTextContent" class="custom-textarea" placeholder="Type your text content here..."></textarea>
-                <button class="btn primary-btn" onclick="convertTextToPDF()">🚀 Download Text as PDF</button>
-            </section>
-
-            <!-- Recent History Section -->
-            <div class="history-card">
-                <h3>📜 Recent Files Created</h3>
-                <ul id="historyList" class="file-list">
-                    <li class="empty-msg">No recent files generated yet.</li>
-                </ul>
-            </div>
-        </main>
-
-        <footer>
-            <p>© 2026 LeoPDF | Designed with Neon Dark Theme</p>
-        </footer>
-    </div>
-
-    <script src="script.js"></script>
 </body>
-</html>
+                               </html>
