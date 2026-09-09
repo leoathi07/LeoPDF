@@ -1082,4 +1082,4 @@ function escapeHTML(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 
-      }
+                                }
